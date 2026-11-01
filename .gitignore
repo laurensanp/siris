@@ -12,9 +12,9 @@ libs/
 *.lib
 *.pdb
 .idea/
-voxy-vulkan/build/
-voxy-vulkan/.gradle/
-voxy-vulkan/run/
+viris/build/
+viris/.gradle/
+viris/run/
 
 # secrets
 .env
