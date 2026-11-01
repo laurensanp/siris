@@ -181,7 +181,7 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   allocated_memory 8192; selected via `settings/launcher.json` `settings.gameProfile`; backup in
   `~/.lunarclient/db-backup-2026-10-30/`). Mods: iris-dlss, Sodium 0.9.3-beta.1, Vitrail, Fabric API 0.165.0, Mod
   Menu, ImmediatelyFast, EntityCulling, FerriteCore, Dynamic FPS, Particle Core (+ Fabric Language Kotlin,
-  fzzy_config), Alternate Current, zfastnoise (+ zconfig); no Voxy. DLSS Custom 80 % + sharpen 0.5 + FG x2,
+  fzzy_config), Alternate Current, zfastnoise (+ zconfig); Voxy + VIRIS + voxy-server-side added 2026-11-01. DLSS Custom 80 % + sharpen 0.5 + FG x2,
   render distance 16 / simulation 8, mipmaps 4, Vitrail shadowdistance 12, Solas DOF off, shadowDistance 192,
   VL_SAMPLES 8. First run singleplayer: 176-209 fps shown / 92-105 rendered with Solas. Added 2026-10-30 (user
   approved downloads, sha512 checked against Modrinth): Lithium 0.26.3, More Culling 1.9.0 (+ Cloth Config from
