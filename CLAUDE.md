@@ -308,7 +308,13 @@ v0.7.1 (2026-10-27): pacing without VSync, vertex buffer reuse, diagnosticRecord
 attached). v0.7.2 (2026-10-30): LunarCompat (plain Vitrail jar in Lunar, threaded present off); full release marked "Latest" (user asked). v0.7.3 (2026-10-30, Latest): `lunarCompat`
 kept in `iris-dlss.properties` (0.7.2's `DlssConfig.save` dropped the key, so `lunarCompat=false` held one start). v0.7.4 (2026-10-30, Latest): pack TAA off also when shaders start disabled, animated pack dither, RCAS
 sharpening, no jitter on join, entity motion vectors, FG matrices in double, memory notice (same voxy-vulkan 0.1.1).
-viris-v0.3.2 (2026-11-01, Latest, "VIRIS 0.3.2 + SIRIS 1.1.3"): no LOD outlines after rejoining; Modrinth viris 0.3.2
+viris-v0.3.3 (2026-11-02, Latest, "VIRIS 0.3.3 + SIRIS 1.1.3"): LODs survive shader reloads/toggles; Modrinth viris 0.3.3
+(id o1vibgM3). Lunar surv + DLSS Optimized have viris-0.3.3 (backups `mods-backup-2026-11-02-viris033/`), not started.
+Open: on survival.glaaaspenis.de LODs show without colour (grey outlines by day, dark silhouettes at night) with
+Complementary, in colour without shaders (user tested). Not reproduced: dev LAN with Voxy Server Side was in colour;
+zeroing sky light in rawIngest broke LODs with and without shaders (so not that). Next: Complementary's block ids for
+the server's blocks, or a capture/log around the user's next grey shot.
+viris-v0.3.2 (2026-11-01, "VIRIS 0.3.2 + SIRIS 1.1.3"): no LOD outlines after rejoining; Modrinth viris 0.3.2
 (id ieYulT8H). Lunar surv and DLSS Optimized have viris-0.3.2 (backups `mods-backup-2026-11-01-viris032/`); DLSS Optimized started:
 singleplayer with Complementary, LODs in colour to the horizon, 203/100 fps. A real rejoin on the server not tried.
 viris-v0.3.1 (2026-11-01, "VIRIS 0.3.1 + SIRIS 1.1.3"): no ghost LODs after Voxy is switched off; Modrinth viris
@@ -323,7 +329,7 @@ VIRIS gallery: 4 images (midday, no grid visible), siris-dlss gallery: 6 images.
 viris-v0.3.0 (2026-11-01, title "VIRIS 0.3.0 + SIRIS 1.1.2 (Minecraft 26.3)"): `viris-0.3.0+mc26.3.jar` (rename,
 shader pack LODs) + unchanged `siris-1.1.2+mc26.3.jar`.
 Modrinth (token `MODRINTH_TOKEN` in `.env`, API v2 with header `Authorization: <token>`): `siris-dlss` (id NLzgnD4s,
-1.1.3) and `viris` (id IHYZKsvL, 0.3.2, created 2026-11-01 by API: POST /v2/project as draft with icon, POST /v2/version
+1.1.3) and `viris` (id IHYZKsvL, 0.3.3, created 2026-11-01 by API: POST /v2/project as draft with icon, POST /v2/version
 with dependencies Voxy/Sodium/Fabric API required, Vitrail/SIRIS optional, then PATCH /v3/version `environment:
 client_only` (else "select_environment" blocks) and PATCH /v2/project `status: processing`). Both waiting for review.
 New Modrinth versions: same POST /v2/version (version_type release, game_versions 26.3, loaders fabric).
