@@ -53,6 +53,13 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   (SIRIS frame stack in blue: ground `#0F1522`, `#4F5B6E`, `#7CC4FF`, `#3D8BFF`, 2x2 voxel grid instead of the plus),
   log prefix `VIRIS:`, dev property `-Dviris.timing`, jar `viris-<version>`, Modrinth `viris` (own project). Lunar:
   remove `voxy-vulkan-*.jar` (other mod id, else both load). Theme colour for VIRIS: `#3D8BFF`.
+- VIRIS in Lunar (2026-11-01): `DLSS Optimized` has viris-0.3.0 instead of voxy-vulkan-0.2.0 (backup
+  `mods-backup-2026-11-01-viris/`), Voxy 0.2.20, siris-1.1.2, Complementary on: at render distance 8 the LODs reach the
+  horizon with the pack's own lighting, 275/137 fps (FG x2), no errors. Lunar's game log shows none of VIRIS' INFO
+  lines (only `Enabling optional FeatureSet [VIRIS OpenGL interop]`); check with F3 (voxy line) and screenshots.
+  surv/dlss-test untouched (user: only DLSS Optimized). Voxy Server Side (`lss` 0.19.0, in surv) loads fine with
+  VIRIS (dev): it feeds Voxy's own ingest (`VoxyCompat` raw ingest bridge), VIRIS only replaces drawing; in
+  singleplayer it waits for LAN ("LOD request processing deferred until LAN"), server not tested.
 - voxy-vulkan 0.2.0 (2026-11-01, user asked for a 1:1 port; the own LodRenderer of 0.1.x is gone): Voxy's own
   GL renderer runs unchanged on a hidden SDL OpenGL 4.6 context (`GlContext`, made current at
   `RenderSystem.initRenderer` RETURN order 800, before Voxy's own init at 900). Voxy's only draw entry is
