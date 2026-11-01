@@ -304,8 +304,8 @@ attached). v0.7.2 (2026-10-30): LunarCompat (plain Vitrail jar in Lunar, threade
 kept in `iris-dlss.properties` (0.7.2's `DlssConfig.save` dropped the key, so `lunarCompat=false` held one start). v0.7.4 (2026-10-30, Latest): pack TAA off also when shaders start disabled, animated pack dither, RCAS
 sharpening, no jitter on join, entity motion vectors, FG matrices in double, memory notice (same voxy-vulkan 0.1.1).
 viris-v0.3.2 (2026-11-01, Latest, "VIRIS 0.3.2 + SIRIS 1.1.3"): no LOD outlines after rejoining; Modrinth viris 0.3.2
-(id ieYulT8H). Lunar surv has viris-0.3.2 (backup `mods-backup-2026-11-01-viris032/`); DLSS Optimized still 0.3.1 (game was
-running, replace once it's closed).
+(id ieYulT8H). Lunar surv and DLSS Optimized have viris-0.3.2 (backups `mods-backup-2026-11-01-viris032/`); DLSS Optimized started:
+singleplayer with Complementary, LODs in colour to the horizon, 203/100 fps. A real rejoin on the server not tried.
 viris-v0.3.1 (2026-11-01, "VIRIS 0.3.1 + SIRIS 1.1.3"): no ghost LODs after Voxy is switched off; Modrinth viris
 version 0.3.1 (id auUQfWsM). Lunar surv + DLSS Optimized have viris-0.3.1 (backups `mods-backup-2026-11-01-viris031/`);
 DLSS Optimized started fine (Complementary + LODs, 175/88 fps), Voxy toggle not tried in Lunar (verified in dev).
