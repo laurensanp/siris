@@ -314,6 +314,8 @@ Grey LODs on the server = second join (user: first join fine, second corrupted, 
 `VitrailJoinReloadMixin` skipped Vitrail's pack reload on rejoin; the pack then drew Voxy's LODs without colour. Fixed
 in SIRIS 1.1.4 (no skip when `viris` is loaded). Reproduced and verified with `-PtestRejoin=300` (DevTest leaves the
 world after N ticks and joins again). A delayed VIRIS pipeline rebuild after join did not help (dropped).
+SIRIS 1.1.4 (commit 8d42dbd) is installed in all three Lunar profiles (backups `mods-backup-2026-11-02-114/`); GitHub
+release/Modrinth upload pending the user's go (auto mode blocked `gh release create`).
 viris-v0.3.2 (2026-11-01, "VIRIS 0.3.2 + SIRIS 1.1.3"): no LOD outlines after rejoining; Modrinth viris 0.3.2
 (id ieYulT8H). Lunar surv and DLSS Optimized have viris-0.3.2 (backups `mods-backup-2026-11-01-viris032/`); DLSS Optimized started:
 singleplayer with Complementary, LODs in colour to the horizon, 203/100 fps. A real rejoin on the server not tried.
