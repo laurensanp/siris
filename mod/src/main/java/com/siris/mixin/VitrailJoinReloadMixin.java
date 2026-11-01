@@ -16,8 +16,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * that block tags in block.properties can resolve against the world's registries. For a pack without
  * tags (Solas) that is a 1-2 s hitch for nothing (Lunar logs it as "Pause - Unknown"): when the
  * registry stamp is the only reason, and the pack names no tag, the pack is marked current instead.
- * A dimension change, Distant Horizons or a resource pack material change still reload. Only applied
- * when Vitrail is installed; reflection because Vitrail is not on the compile classpath.
+ * A dimension change, Distant Horizons or a resource pack material change still reload, and so does every
+ * join with VIRIS installed: without the reload the pack's Voxy LODs lost their colour on the second join
+ * (grey outlines until the pack was reloaded). Only applied when Vitrail is installed; reflection because
+ * Vitrail is not on the compile classpath.
  */
 @Pseudo
 @Mixin(targets = "dev.vitrail.render.PackChoice", remap = false)
@@ -37,10 +39,12 @@ public class VitrailJoinReloadMixin {
     private static boolean siris$failed;
     @Unique
     private static boolean siris$logged;
+    @Unique
+    private static final boolean VIRIS = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("viris");
 
     @Inject(method = "reloadIfTheWorldMoved", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private static void siris$skipTaglessReload(Path gameDirectory, CallbackInfoReturnable<Boolean> cir) {
-        if (siris$failed) {
+        if (siris$failed || VIRIS) {
             return;
         }
         try {

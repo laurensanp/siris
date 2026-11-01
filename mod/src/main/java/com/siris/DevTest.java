@@ -20,6 +20,12 @@ public final class DevTest {
     /** -Dsiris.captureTick=N: frame-generation capture (see VulkanPresenter) at client tick N. */
     private static final int CAPTURE_TICK = Integer.getInteger("siris.captureTick", -1);
 
+    /** -Dsiris.testRejoin=N: leaves the world after N ticks and joins it again; the test then runs as usual. */
+    private static final int REJOIN = Integer.getInteger("siris.testRejoin", 0);
+    /** Read by DevTestWorldMixin: open the test world again from the title screen. */
+    public static boolean joinAgain;
+    private static boolean rejoined;
+
     /** -Dsiris.testHideGui=true: F1 (no HUD, hand or overlay) for clean screenshots. */
     private static final boolean HIDE_GUI = Boolean.getBoolean("siris.testHideGui");
 
@@ -34,6 +40,14 @@ public final class DevTest {
             return;
         }
         ticks++;
+        if (REJOIN > 0 && !rejoined && ticks == REJOIN) {
+            rejoined = true;
+            ticks = 0;
+            joinAgain = true;
+            Siris.LOGGER.info("SIRIS test: leaving the world to join it again");
+            minecraft.disconnectFromWorld(net.minecraft.client.multiplayer.ClientLevel.DEFAULT_QUIT_MESSAGE);
+            return;
+        }
         if (ticks == 20 && HIDE_GUI && !minecraft.gui.hud.isHidden()) {
             minecraft.gui.hud.toggle();
         }

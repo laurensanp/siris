@@ -29,9 +29,10 @@ public class DevTestWorldMixin {
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void siris$openTestWorld(CallbackInfo ci) {
-        if (WORLD == null || siris$opened) {
+        if (WORLD == null || siris$opened && !DevTest.joinAgain) {
             return;
         }
+        DevTest.joinAgain = false;
         siris$opened = true;
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.getLevelSource().levelExists(WORLD)) {

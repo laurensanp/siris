@@ -310,10 +310,10 @@ kept in `iris-dlss.properties` (0.7.2's `DlssConfig.save` dropped the key, so `l
 sharpening, no jitter on join, entity motion vectors, FG matrices in double, memory notice (same voxy-vulkan 0.1.1).
 viris-v0.3.3 (2026-11-02, Latest, "VIRIS 0.3.3 + SIRIS 1.1.3"): LODs survive shader reloads/toggles; Modrinth viris 0.3.3
 (id o1vibgM3). Lunar surv + DLSS Optimized have viris-0.3.3 (backups `mods-backup-2026-11-02-viris033/`), not started.
-Open: on survival.glaaaspenis.de LODs show without colour (grey outlines by day, dark silhouettes at night) with
-Complementary, in colour without shaders (user tested). Not reproduced: dev LAN with Voxy Server Side was in colour;
-zeroing sky light in rawIngest broke LODs with and without shaders (so not that). Next: Complementary's block ids for
-the server's blocks, or a capture/log around the user's next grey shot.
+Grey LODs on the server = second join (user: first join fine, second corrupted, shader reload fixes it). Cause: SIRIS'
+`VitrailJoinReloadMixin` skipped Vitrail's pack reload on rejoin; the pack then drew Voxy's LODs without colour. Fixed
+in SIRIS 1.1.4 (no skip when `viris` is loaded). Reproduced and verified with `-PtestRejoin=300` (DevTest leaves the
+world after N ticks and joins again). A delayed VIRIS pipeline rebuild after join did not help (dropped).
 viris-v0.3.2 (2026-11-01, "VIRIS 0.3.2 + SIRIS 1.1.3"): no LOD outlines after rejoining; Modrinth viris 0.3.2
 (id ieYulT8H). Lunar surv and DLSS Optimized have viris-0.3.2 (backups `mods-backup-2026-11-01-viris032/`); DLSS Optimized started:
 singleplayer with Complementary, LODs in colour to the horizon, 203/100 fps. A real rejoin on the server not tried.
