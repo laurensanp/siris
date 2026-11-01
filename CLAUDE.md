@@ -107,6 +107,11 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   the sky. `beforeOpaquePass` now clears `packReadSet` every frame. Reproduced in dev with a temporary
   shutdown-after-N-frames hook (not committed). Possibly also the "grey/black-white background" from the user's first
   server shot.
+  Rejoin (0.3.2, user: "sometimes outlines when I join a world again"): `compositePack` exposed `packReadSet` before
+  checking the pack's gbuffer targets (missing while Vitrail sets the pack up) = depth without colour; it is now set
+  after them. And when Voxy built its renderer while the pack wasn't on, it ran its own pipeline and `packFrame` waited
+  forever on `data().thePipeline`; now it calls `recreateRenderer()` (at most every 2 s). Verified in dev with a
+  temporary hook that rebuilds Voxy's renderer once without the pack pipeline: LODs come back in colour.
   Voxy is All-Rights-Reserved: never pack or modify its jar (runtime mixins only).
 - **Solved (2026-10-27):** in Lunar the FPS dropped after some playtime and recovers later (old fork build and Vitrail alike).
   2026-10-27 finding: Lunar gives the game 3 GB heap ("Allocated Memory: 3072" in crash headers), runs ZGC; on a

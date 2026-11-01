@@ -133,6 +133,7 @@ public final class VoxyFrame {
     private static final int SETS = 3;
     private static final ImageSet[] sets = new ImageSet[SETS];
     private static int frame;
+    private static long lastRecreate;
     private static ImageSet current;
     private static CompiledRenderPipeline compositePipeline;
     private static GpuFormat compositeFormat;
@@ -396,7 +397,17 @@ public final class VoxyFrame {
             recreateRenderer();
             return;
         }
-        if (packPipeline == null || packPipeline.data().thePipeline == null) {
+        if (packPipeline == null) {
+            return;
+        }
+        if (packPipeline.data().thePipeline == null) {
+            // Voxy built its renderer while the pack wasn't on (e.g. joining a world again): it runs its own
+            // pipeline, so ask for the pack's again, at most every 2 seconds.
+            long now = System.nanoTime();
+            if (now - lastRecreate > 2_000_000_000L) {
+                lastRecreate = now;
+                recreateRenderer();
+            }
             return;
         }
         ensureResources(width, height, main.getColorTexture().getFormat());
@@ -499,7 +510,6 @@ public final class VoxyFrame {
         pendingPackSet = null;
         closeVitrailPasses();
         CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
-        packReadSet = set;
         RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         int count = packPipeline.targets.length;
         GpuTextureView[] targets = new GpuTextureView[count];
@@ -511,6 +521,8 @@ public final class VoxyFrame {
             }
             formats.append(targets[i].texture().getFormat()).append(',');
         }
+        // The pack sees the LOD depth only once their colours go in too, else it shades bare depth (grey outlines).
+        packReadSet = set;
         CompiledRenderPipeline pipeline = PACK_COMPOSITES.computeIfAbsent(formats.toString(), k -> packCompositePipeline(targets));
         GpuSampler nearest = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
         com.mojang.renderpearl.api.commands.RenderPassDescriptor.Builder descriptor =
