@@ -5,13 +5,13 @@ Resolution + Frame Generation inside the game's own Vulkan renderer (RenderPearl
 **Vitrail** (separate mod, modrinth `vitrail-shaders`, github avpbynf/Vitrail-Shaders, LGPL-3.0, not ours,
 never commit or ship it). `README.md` lists everything a player or developer needs and where it comes from.
 
-Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. Voxy LODs (voxy-vulkan) in progress (1:1 port via GL interop).
+Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. Voxy LODs: **VIRIS** (`viris/`, was voxy-vulkan, 1:1 port via GL interop).
 
 | Path | What |
 |---|---|
 | `dlss-bridge/` | native C++ bridge (`siris.dll`): NGX, DLSS SR, presenter + DLSS-G, `dlss_probe.exe` |
 | `mod/` | the Fabric mod (Java), packs the bridge + NVIDIA DLLs into its jar |
-| `voxy-vulkan/` | separate mod: Voxy's own renderer on Vulkan via GL interop |
+| `viris/` | VIRIS (was voxy-vulkan): separate mod, Voxy's own renderer on Vulkan via GL interop |
 | `testpacks/` | own small GLSL test packs (from the old Iris port) |
 | `libs/` (ignored) | compile-only jars: `sodium-fabric-0.9.2+mc26.3.jar`, `voxy-0.2.20-beta.jar` (Modrinth) |
 | `mod/run/` (ignored) | test game dir: Sodium, Fabric API, Vitrail in `mods/`, packs, `saves/vulkan-test`, `vitrail/pack.txt` |
@@ -48,6 +48,11 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   Vitrail's hand is too bright at night. Could be reported upstream (ask the user first).
 - Benchmark 2026-10-27, 1080p, Solas, render distance 8, static view, 4060 Ti, rendered fps: SR+FG 122 (245 shown),
   Quality 176, Performance 217, DLAA 123, off 146 (old fork in the same scene: 115/161/196/114/133).
+- VIRIS (2026-11-01, user's wish: voxy-vulkan renamed for 0.3.0, blue theme): mod id `viris`, package
+  `com.siris.viris` (main class `Viris`), `viris.mixins.json`, `assets/viris/icon.png`, `.github/assets/viris-icon.*`
+  (SIRIS frame stack in blue: ground `#0F1522`, `#4F5B6E`, `#7CC4FF`, `#3D8BFF`, 2x2 voxel grid instead of the plus),
+  log prefix `VIRIS:`, dev property `-Dviris.timing`, jar `viris-<version>`, Modrinth `viris` (own project). Lunar:
+  remove `voxy-vulkan-*.jar` (other mod id, else both load). Theme colour for VIRIS: `#3D8BFF`.
 - voxy-vulkan 0.2.0 (2026-11-01, user asked for a 1:1 port; the own LodRenderer of 0.1.x is gone): Voxy's own
   GL renderer runs unchanged on a hidden SDL OpenGL 4.6 context (`GlContext`, made current at
   `RenderSystem.initRenderer` RETURN order 800, before Voxy's own init at 900). Voxy's only draw entry is
@@ -72,8 +77,8 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   before dev tests. SIRIS side note: closing Lunar's window once wrote a watchdog crash report
   (`DlssNative.destroyPresenter` hung on shutdown). Tried and dropped: timeline
   semaphores (NVIDIA 617 passed only GL's first signal to Vulkan), GL fence + CPU wait before submit (hung with
-  DLSS), reading back a shared texture on the GL side (glGetTextureImage, hung). `-Dvoxyvulkan.timing=true` logs
-  Voxy CPU/GL time, free VRAM and evictions. With a shader pack the LODs are still skipped (`ShaderPacks.active()`).
+  DLSS), reading back a shared texture on the GL side (glGetTextureImage, hung). `-Dviris.timing=true` logs
+  Voxy CPU/GL time, free VRAM and evictions. Without Voxy support in the pack the LODs are skipped while it is on.
   Shader packs (2026-11-01, milestone 1): packs with Voxy support (`shaders/<world>/voxy.json` + `voxy_opaque.glsl`/
   `voxy_translucent.glsl`: Complementary, BSL, Photon, Solas, MakeUp...) draw the LODs with their own code, as under
   Iris. `pack/PackPatch` reads the patch with Vitrail's IncludeExpander (place from `DimensionSet.place`,
@@ -182,7 +187,7 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
 - Gradle needs **JDK 25**: `JAVA_HOME=~/.jdks/jdk-25.0.4.1+1`. Use `--no-daemon`; "Could not connect to the Gradle
   daemon" happens often, `gradlew --stop` and rerun.
 - Bridge: `dlss-bridge/fetch-deps.ps1`, `dlss-bridge/build.bat` (MSVC 2022, Build Tools are enough). Mod:
-  `cd mod && gradlew build` -> `mod/build/libs/siris-*.jar`. voxy-vulkan: `cd voxy-vulkan && gradlew build`.
+  `cd mod && gradlew build` -> `mod/build/libs/siris-*.jar`. VIRIS: `cd viris && gradlew build`.
 - Test loop: `cd mod && gradlew runClient -PtestWorld=vulkan-test` joins/creates the world, screenshot
   `mod/run/screenshots/dlss-test.png` after 200 ticks, quits (`DevTest`, `DevTestWorldMixin`). Options:
   `-PtestCommands="time set 1500;weather clear;tp @p -36 84 18 -90 20"` (tree/shadow view; `tp @p -36 82 18 180 8`
@@ -192,7 +197,7 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
 - Dev `options.txt`: `fullscreen:false` (else a focus change minimizes and caps at 10 fps),
   `inactivityFpsLimit:"minimized"` (else the 30 fps AFK limit hits benchmarks). Run benchmarks with nothing else
   loading the PC (±25 %). Logs written across midnight get lost (log roll), rerun.
-- Voxy dev test: move `mod/run/mods-voxy/*` (Voxy) plus voxy-vulkan's jar into `mod/run/mods`, no shader pack,
+- Voxy dev test: move `mod/run/mods-voxy/*` (Voxy) plus VIRIS' jar into `mod/run/mods`, no shader pack,
   one run at render distance 32 so Voxy ingests, then lower it. `-PtestTicks=400+` (meshing takes seconds).
 - OpenGL reference shot: `enabled=false` in `config/siris.properties` + `preferredGraphicsBackend:"opengl"` in
   `options.txt` (Vitrail: `vitrail/graphics-api.txt`), then restore.
@@ -286,7 +291,7 @@ entity modes off with Vitrail (armor stands, sign text). Same voxy-vulkan 0.1.1.
 v0.7.6 (2026-10-30): wWaypoints icons get their waypoint's motion vectors (no flicker with FG).
 v0.7.5 (2026-10-30): wWaypoints icons move with FG, Vitrail join reload skipped for tagless packs.
 v0.5.0/v0.6.0 notes start with an "Outdated, needs the archived fork" line. Next release: bump `version` in
-`mod/build.gradle` (and `voxy-vulkan/build.gradle` if it changed), README notes, keep the asset names.
+`mod/build.gradle` (and `viris/build.gradle` if it changed), README notes, keep the asset names.
 
 ## Working with the user
 

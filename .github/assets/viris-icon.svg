@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64" role="img" aria-label="VIRIS">
+  <rect width="64" height="64" rx="14" fill="#0F1522"/>
+  <rect x="9" y="9" width="28" height="28" rx="5" fill="none" stroke="#4F5B6E" stroke-width="2.5"/>
+  <rect x="18" y="18" width="28" height="28" rx="5" fill="none" stroke="#7CC4FF" stroke-width="2.5" stroke-dasharray="4 3.2"/>
+  <rect x="27" y="27" width="28" height="28" rx="5" fill="#3D8BFF"/>
+  <g fill="#0F1522">
+    <rect x="35" y="35" width="5" height="5" rx="1"/>
+    <rect x="42" y="35" width="5" height="5" rx="1"/>
+    <rect x="35" y="42" width="5" height="5" rx="1"/>
+    <rect x="42" y="42" width="5" height="5" rx="1"/>
+  </g>
+</svg>

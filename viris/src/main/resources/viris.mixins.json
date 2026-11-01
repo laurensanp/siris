@@ -1,0 +1,33 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.siris.viris.mixin",
+  "plugin": "com.siris.viris.VirisMixinPlugin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "DefaultChunkRendererMixin",
+    "FrontendGpuDeviceAccessor",
+    "IrisVoxyRenderPipelineDataMixin",
+    "IrisVoxyRenderPipelineMixin",
+    "LevelRendererMixin",
+    "LightMapHelperMixin",
+    "MinecraftMixin",
+    "RenderPipelineFactoryMixin",
+    "RenderSystemMixin",
+    "SodiumWorldRendererMixin",
+    "SoftwareModelTextureBakeryMixin",
+    "SpriteContentsAccessor",
+    "TextureAtlasAccessor",
+    "VulkanCommandEncoderMixin",
+    "VulkanFeatureSetsMixin",
+    "VulkanGpuTextureAccessor",
+    "VulkanGpuTextureMixin",
+    "vitrail.EngineDefinesMixin",
+    "vitrail.PackChainMixin",
+    "vitrail.PackPassMixin",
+    "vitrail.UniformCatalogMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
