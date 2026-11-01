@@ -112,6 +112,11 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   after them. And when Voxy built its renderer while the pack wasn't on, it ran its own pipeline and `packFrame` waited
   forever on `data().thePipeline`; now it calls `recreateRenderer()` (at most every 2 s). Verified in dev with a
   temporary hook that rebuilds Voxy's renderer once without the pack pipeline: LODs come back in colour.
+  Shader reload (0.3.3, user: "after reloading shaders the LODs are completely gone"): (1) `dropPackPipeline` kept
+  `packKey`, so the same pack coming back never rebuilt the pipeline; it now resets it (the key-change branch drops first,
+  then sets the key). (2) While the pack switched off, Vitrail still held a pass open and the own-pipeline `render()`
+  threw "Cannot add semaphore operation while inside RenderPass" -> `failed` for the session; it now calls
+  `closeVitrailPasses()` first when Vitrail is installed. Verified with a temporary pack-off-for-100-frames hook.
   Voxy is All-Rights-Reserved: never pack or modify its jar (runtime mixins only).
 - **Solved (2026-10-27):** in Lunar the FPS dropped after some playtime and recovers later (old fork build and Vitrail alike).
   2026-10-27 finding: Lunar gives the game 3 GB heap ("Allocated Memory: 3072" in crash headers), runs ZGC; on a

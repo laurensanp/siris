@@ -321,6 +321,11 @@ public final class VoxyFrame {
             }
         }
 
+        if (com.siris.viris.pack.VitrailBridge.present()) {
+            // While a shader pack switches off or reloads, Vitrail can still hold a pass open; a semaphore wait in
+            // there threw and switched the LODs off for the session.
+            closeVitrailPasses();
+        }
         CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
         VulkanCommandEncoder vulkan = (VulkanCommandEncoder) ((FrontendCommandEncoder) encoder).backend();
         vulkan.waitSemaphore(set.glDone[0], 0L, ALL_COMMANDS);
@@ -389,8 +394,8 @@ public final class VoxyFrame {
         int height = main.height;
         String key = pack.path() + "|" + pack.chosen() + "|" + pack.profile() + "|" + pack.world() + "|" + width + "x" + height;
         if (!key.equals(packKey)) {
-            packKey = key;
             dropPackPipeline();
+            packKey = key;
             packPipeline = com.siris.viris.pack.PackPipeline.create(pack, width, height);
             Viris.LOGGER.info("VIRIS: shader pack {} {}", pack.path().getFileName(),
                 packPipeline == null ? "has no Voxy support, LODs stay off" : "draws the LODs with its own Voxy code");
@@ -622,6 +627,9 @@ public final class VoxyFrame {
     private static void dropPackPipeline() {
         GL45C.glFinish();
         packReadSet = null;
+        // Forget which pack it was built for, else the same pack coming back (shaders toggled or reloaded) finds an
+        // equal key and never builds the pipeline again: no LODs.
+        packKey = "";
         if (packPipeline != null) {
             packPipeline.close();
             packPipeline = null;
