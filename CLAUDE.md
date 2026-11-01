@@ -298,7 +298,10 @@ v0.7.1 (2026-10-27): pacing without VSync, vertex buffer reuse, diagnosticRecord
 attached). v0.7.2 (2026-10-30): LunarCompat (plain Vitrail jar in Lunar, threaded present off); full release marked "Latest" (user asked). v0.7.3 (2026-10-30, Latest): `lunarCompat`
 kept in `iris-dlss.properties` (0.7.2's `DlssConfig.save` dropped the key, so `lunarCompat=false` held one start). v0.7.4 (2026-10-30, Latest): pack TAA off also when shaders start disabled, animated pack dither, RCAS
 sharpening, no jitter on join, entity motion vectors, FG matrices in double, memory notice (same voxy-vulkan 0.1.1).
-v1.1.3 (2026-11-01, Latest): DLSS model M by default (K's grid over shader pack noise), `siris-1.1.3+mc26.3.jar` +
+viris-v0.3.1 (2026-11-01, Latest, "VIRIS 0.3.1 + SIRIS 1.1.3"): no ghost LODs after Voxy is switched off; Modrinth viris
+version 0.3.1 (id auUQfWsM). Lunar surv + DLSS Optimized have viris-0.3.1 (backups `mods-backup-2026-11-01-viris031/`);
+DLSS Optimized started fine (Complementary + LODs, 175/88 fps), Voxy toggle not tried in Lunar (verified in dev).
+v1.1.3 (2026-11-01): DLSS model M by default (K's grid over shader pack noise), `siris-1.1.3+mc26.3.jar` +
 unchanged `viris-0.3.0+mc26.3.jar`; Modrinth siris-dlss version 1.1.3 (id 4vXqzP0M). Lunar `DLSS Optimized` has it
 (backup `mods-backup-2026-11-01-113/`, with voxy-server-side added by the user): config moved to `preset=m`,
 `configVersion=2`, singleplayer with Complementary + LODs 177/88 fps, no grid. surv and dlss-test got siris-1.1.3 too
@@ -307,7 +310,7 @@ VIRIS gallery: 4 images (midday, no grid visible), siris-dlss gallery: 6 images.
 viris-v0.3.0 (2026-11-01, title "VIRIS 0.3.0 + SIRIS 1.1.2 (Minecraft 26.3)"): `viris-0.3.0+mc26.3.jar` (rename,
 shader pack LODs) + unchanged `siris-1.1.2+mc26.3.jar`.
 Modrinth (token `MODRINTH_TOKEN` in `.env`, API v2 with header `Authorization: <token>`): `siris-dlss` (id NLzgnD4s,
-1.1.3) and `viris` (id IHYZKsvL, 0.3.0, created 2026-11-01 by API: POST /v2/project as draft with icon, POST /v2/version
+1.1.3) and `viris` (id IHYZKsvL, 0.3.1, created 2026-11-01 by API: POST /v2/project as draft with icon, POST /v2/version
 with dependencies Voxy/Sodium/Fabric API required, Vitrail/SIRIS optional, then PATCH /v3/version `environment:
 client_only` (else "select_environment" blocks) and PATCH /v2/project `status: processing`). Both waiting for review.
 New Modrinth versions: same POST /v2/version (version_type release, game_versions 26.3, loaders fabric).
