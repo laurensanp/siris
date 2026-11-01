@@ -33,7 +33,7 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   (`build.bat`) for the new DLL/JNI names. Lunar: remove `iris-dlss-*.jar` (other file name, else both load).
 - History of iris-dlss keeps Kiwious' Claude co-author lines (user decided not to rewrite).
 
-## Status (2026-10-30)
+## Status (2026-11-02)
 
 - **DLSS with Vitrail works** (Vitrail 0.13.0-beta, Solas 3.8, verified with screenshots, an FG capture and a
   benchmark): Vitrail draws the world into the main target (reverse-Z depth kept), takes the projection the game
@@ -53,13 +53,10 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   (SIRIS frame stack in blue: ground `#0F1522`, `#4F5B6E`, `#7CC4FF`, `#3D8BFF`, 2x2 voxel grid instead of the plus),
   log prefix `VIRIS:`, dev property `-Dviris.timing`, jar `viris-<version>`, Modrinth `viris` (own project). Lunar:
   remove `voxy-vulkan-*.jar` (other mod id, else both load). Theme colour for VIRIS: `#3D8BFF`.
-- VIRIS in Lunar (2026-11-01): `DLSS Optimized` has viris-0.3.0 instead of voxy-vulkan-0.2.0 (backup
-  `mods-backup-2026-11-01-viris/`), Voxy 0.2.20, siris-1.1.2, Complementary on: at render distance 8 the LODs reach the
-  horizon with the pack's own lighting, 275/137 fps (FG x2), no errors. Lunar's game log shows none of VIRIS' INFO
-  lines (only `Enabling optional FeatureSet [VIRIS OpenGL interop]`); check with F3 (voxy line) and screenshots.
-  surv/dlss-test untouched (user: only DLSS Optimized). Voxy Server Side (`lss` 0.19.0, in surv) loads fine with
-  VIRIS (dev): it feeds Voxy's own ingest (`VoxyCompat` raw ingest bridge), VIRIS only replaces drawing; in
-  singleplayer it waits for LAN ("LOD request processing deferred until LAN"), server not tested.
+- VIRIS in Lunar: see "Current Lunar install". Lunar's game log shows none of VIRIS' INFO lines (only `Enabling
+  optional FeatureSet [VIRIS OpenGL interop]`); check with F3 (voxy line) and F2 screenshots. Voxy Server Side (`lss`
+  0.19.0) works with VIRIS: it feeds Voxy's own ingest (`VoxyCompat` raw ingest bridge), VIRIS only draws; dev test via
+  LAN (`publish` in -PtestCommands; singleplayer alone waits for LAN). Used by the user on survival.glaaaspenis.de.
 - voxy-vulkan 0.2.0 (2026-11-01, user asked for a 1:1 port; the own LodRenderer of 0.1.x is gone): Voxy's own
   GL renderer runs unchanged on a hidden SDL OpenGL 4.6 context (`GlContext`, made current at
   `RenderSystem.initRenderer` RETURN order 800, before Voxy's own init at 900). Voxy's only draw entry is
@@ -117,6 +114,10 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   then sets the key). (2) While the pack switched off, Vitrail still held a pass open and the own-pipeline `render()`
   threw "Cannot add semaphore operation while inside RenderPass" -> `failed` for the session; it now calls
   `closeVitrailPasses()` first when Vitrail is installed. Verified with a temporary pack-off-for-100-frames hook.
+  Grey LODs on every join after the first (user's server, "first join fine, second corrupted, shader reload fixes
+  it"): SIRIS' `VitrailJoinReloadMixin` skipped Vitrail's pack reload on rejoin and the pack then drew the LODs without
+  colour. SIRIS 1.1.4 keeps the reload when `viris` is loaded. Reproduced and verified with `-PtestRejoin=300`. A
+  delayed VIRIS pipeline rebuild after join did not help (dropped). Sky light from Voxy Server Side is not the cause.
   Voxy is All-Rights-Reserved: never pack or modify its jar (runtime mixins only).
 - **Solved (2026-10-27):** in Lunar the FPS dropped after some playtime and recovers later (old fork build and Vitrail alike).
   2026-10-27 finding: Lunar gives the game 3 GB heap ("Allocated Memory: 3072" in crash headers), runs ZGC; on a
@@ -202,8 +203,11 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   `VulkanCommandEncoder.submitRenderPass`); until 0.7.2 that was worked around with `tools/PatchVitrail.java` (removed 2026-10-31) and a
   local `-lunarfix` Vitrail jar (`../vitrail-dl`, never publish), since 0.7.2 `LunarCompat` does it at runtime.
   Could be reported to Vitrail (use @WrapOperation instead of @Redirect); ask the user first.
-- Current Lunar install (2026-10-31): surv, dlss-test and dlss-optimized have `iris-dlss-1.1.1+mc26.3.jar` (1.1.0 in `mods-backup-2026-10-31-110/`, 0.7.7 in `mods-backup-2026-10-31-077/`, 0.7.6 in `mods-backup-2026-10-31-076/`) + plain `vitrail-0.13.0-beta+mc26.3.jar`,
-  `diagnosticRecording=false`; Lunar's active settings profile is `Default` (`DLSS` = empty test profile).
+- Current Lunar install (2026-11-02): all three profiles have `siris-1.1.4+mc26.3.jar` (config `preset=m`,
+  `configVersion=2`) + plain `vitrail-0.13.0-beta+mc26.3.jar`; surv and dlss-optimized also `viris-0.3.3+mc26.3.jar`,
+  Voxy 0.2.20 and voxy-server-side (surv keeps an old `voxy-vulkan-0.1.0` as `.disabled`). Backups per step in each
+  profile's `mods-backup-2026-11-0x-*/`. The user plays DLSS Optimized now (Complementary, render distance 24,
+  simulation 32, Custom 80 % + FG x2). `diagnosticRecording=false`; Lunar's active settings profile is `Default`.
 
 ## Build & test
 
@@ -215,7 +219,8 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   `mod/run/screenshots/dlss-test.png` after 200 ticks, quits (`DevTest`, `DevTestWorldMixin`). Options:
   `-PtestCommands="time set 1500;weather clear;tp @p -36 84 18 -90 20"` (tree/shadow view; `tp @p -36 82 18 180 8`
   = beach view), `-PtestPitch`, `-PtestTicks=600` (more for screenshots after loading), `-PwindowSize=1920x1080`,
-  `-PtestHideGui=true` (F1, for gallery shots; overlay=off too), `-PdlssBenchmark` (logs `SIRIS benchmark:` lines), `-PdlssOff`, `-PdlssDebug=spin|walk` (FG capture into
+  `-PtestHideGui=true` (F1, for gallery shots; overlay=off too), `-PtestRejoin=N` (leave the world after N ticks, join
+  again, then the normal test), `-PdlssBenchmark` (logs `SIRIS benchmark:` lines), `-PdlssOff`, `-PdlssDebug=spin|walk` (FG capture into
   `mod/run/siris/captures`, only fires with Frame Generation). Look at the screenshot.
 - Dev `options.txt`: `fullscreen:false` (else a focus change minimizes and caps at 10 fps),
   `inactivityFpsLimit:"minimized"` (else the 30 fps AFK limit hits benchmarks). Run benchmarks with nothing else
@@ -268,7 +273,8 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   `PackChoice.reloadIfTheWorldMoved` re-reading/compiling the whole pack because the registry stamp changed (only
   needed for block tags `%ns:path` in block.properties). `VitrailJoinReloadMixin` skips it (PackDefines.settle()
   by reflection) when that is the only reason and the pack names no tag (`ShaderPackTweaks.selectedPackUsesBlockTags`);
-  dimension change / DH / LabPBR still reload. Solas has no tags. Remaining join cost: Vitrail pipeline warm-up
+  dimension change / DH / LabPBR still reload, and since 1.1.4 every join with `viris` loaded (else the LODs lost
+  their colour on the second join). Solas has no tags. Remaining join cost: Vitrail pipeline warm-up
   (`skipLevelWhilePackWarms`), chunk loading. Window resize recreates DLSS/FG (150-250 ms, expected).
 - Presenter alone costs nothing (dev, FG off: presenter 133-135 fps vs presenter off 136); FG costs ~3.3 ms per
   rendered frame (benchmark 89.8 vs 128.8 rendered).
@@ -301,52 +307,35 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
 
 ## Releases
 
-`"C:\Program Files\GitHub CLI\gh.exe" release create <tag> <jars> -R laurensanp/siris --title "SIRIS
-<version> (Minecraft 26.3)" --latest` (gh is logged in as laurensanp; up to 0.7.1 they were `--prerelease`). v0.7.0 (2026-10-27, first with Vitrail): `iris-dlss-0.7.0+mc26.3.jar` +
-`voxy-vulkan-0.1.1+mc26.3.jar`; Vitrail is never attached (link to Modrinth).
-v0.7.1 (2026-10-27): pacing without VSync, vertex buffer reuse, diagnosticRecording (same voxy-vulkan 0.1.1
-attached). v0.7.2 (2026-10-30): LunarCompat (plain Vitrail jar in Lunar, threaded present off); full release marked "Latest" (user asked). v0.7.3 (2026-10-30, Latest): `lunarCompat`
-kept in `iris-dlss.properties` (0.7.2's `DlssConfig.save` dropped the key, so `lunarCompat=false` held one start). v0.7.4 (2026-10-30, Latest): pack TAA off also when shaders start disabled, animated pack dither, RCAS
-sharpening, no jitter on join, entity motion vectors, FG matrices in double, memory notice (same voxy-vulkan 0.1.1).
-viris-v0.3.3 (2026-11-02, Latest, "VIRIS 0.3.3 + SIRIS 1.1.3"): LODs survive shader reloads/toggles; Modrinth viris 0.3.3
-(id o1vibgM3). Lunar surv + DLSS Optimized have viris-0.3.3 (backups `mods-backup-2026-11-02-viris033/`), not started.
-Grey LODs on the server = second join (user: first join fine, second corrupted, shader reload fixes it). Cause: SIRIS'
-`VitrailJoinReloadMixin` skipped Vitrail's pack reload on rejoin; the pack then drew Voxy's LODs without colour. Fixed
-in SIRIS 1.1.4 (no skip when `viris` is loaded). Reproduced and verified with `-PtestRejoin=300` (DevTest leaves the
-world after N ticks and joins again). A delayed VIRIS pipeline rebuild after join did not help (dropped).
-SIRIS 1.1.4 (commit 8d42dbd) is installed in all three Lunar profiles (backups `mods-backup-2026-11-02-114/`); GitHub
-release v1.1.4 (Latest, with viris-0.3.3) and Modrinth siris-dlss 1.1.4 published 2026-11-02 after the user's go.
-viris-v0.3.2 (2026-11-01, "VIRIS 0.3.2 + SIRIS 1.1.3"): no LOD outlines after rejoining; Modrinth viris 0.3.2
-(id ieYulT8H). Lunar surv and DLSS Optimized have viris-0.3.2 (backups `mods-backup-2026-11-01-viris032/`); DLSS Optimized started:
-singleplayer with Complementary, LODs in colour to the horizon, 203/100 fps. A real rejoin on the server not tried.
-viris-v0.3.1 (2026-11-01, "VIRIS 0.3.1 + SIRIS 1.1.3"): no ghost LODs after Voxy is switched off; Modrinth viris
-version 0.3.1 (id auUQfWsM). Lunar surv + DLSS Optimized have viris-0.3.1 (backups `mods-backup-2026-11-01-viris031/`);
-DLSS Optimized started fine (Complementary + LODs, 175/88 fps), Voxy toggle not tried in Lunar (verified in dev).
-v1.1.3 (2026-11-01): DLSS model M by default (K's grid over shader pack noise), `siris-1.1.3+mc26.3.jar` +
-unchanged `viris-0.3.0+mc26.3.jar`; Modrinth siris-dlss version 1.1.3 (id 4vXqzP0M). Lunar `DLSS Optimized` has it
-(backup `mods-backup-2026-11-01-113/`, with voxy-server-side added by the user): config moved to `preset=m`,
-`configVersion=2`, singleplayer with Complementary + LODs 177/88 fps, no grid. surv and dlss-test got siris-1.1.3 too
-(iris-dlss-1.1.1 removed, backups `mods-backup-2026-11-01-113/`); surv also got viris-0.3.0 (same jar as DLSS Optimized; old voxy-vulkan-0.1.0 stays `.disabled`), not started yet.
-VIRIS gallery: 4 images (midday, no grid visible), siris-dlss gallery: 6 images.
-viris-v0.3.0 (2026-11-01, title "VIRIS 0.3.0 + SIRIS 1.1.2 (Minecraft 26.3)"): `viris-0.3.0+mc26.3.jar` (rename,
-shader pack LODs) + unchanged `siris-1.1.2+mc26.3.jar`.
-Modrinth (token `MODRINTH_TOKEN` in `.env`, API v2 with header `Authorization: <token>`): `siris-dlss` (id NLzgnD4s,
-1.1.4) and `viris` (id IHYZKsvL, 0.3.3, created 2026-11-01 by API: POST /v2/project as draft with icon, POST /v2/version
-with dependencies Voxy/Sodium/Fabric API required, Vitrail/SIRIS optional, then PATCH /v3/version `environment:
-client_only` (else "select_environment" blocks) and PATCH /v2/project `status: processing`). Both waiting for review.
-New Modrinth versions: same POST /v2/version (version_type release, game_versions 26.3, loaders fabric).
-v1.1.1 (2026-10-31): orange theme `#FF6A3D` (the icon's ember) for the settings screen headers, Sodium page theme
-(`setBaseThemeRGB`) and README badges; icon in Sodium's list (`setNonTintedIcon(iris-dlss:icon.png)`). Notes in
-`mod/build/release-notes-1.1.1.md`. Theme colour for anything new: `#FF6A3D` (amber `#FFB547`, ground `#17140F`).
-v1.1.0 (2026-10-31, created by the user): first 1.x, PYRAXIS icon (frame stack: `.github/assets/pyraxis-icon.svg`, mod icon
-`assets/iris-dlss/icon.png` rendered from it at 128 px), cleanup; notes in `mod/build/release-notes-1.1.0.md`.
-v0.7.7 (2026-10-31, created by the user; auto mode blocks `gh release create`, give the PowerShell command
-`& "C:\Program Files\GitHub CLI\gh.exe" release create ... --notes-file ...`): x jitter sign fixed (no shaking), Lunar Turbo
-entity modes off with Vitrail (armor stands, sign text). Same voxy-vulkan 0.1.1.
-v0.7.6 (2026-10-30): wWaypoints icons get their waypoint's motion vectors (no flicker with FG).
-v0.7.5 (2026-10-30): wWaypoints icons move with FG, Vitrail join reload skipped for tagless packs.
-v0.5.0/v0.6.0 notes start with an "Outdated, needs the archived fork" line. Next release: bump `version` in
-`mod/build.gradle` (and `viris/build.gradle` if it changed), README notes, keep the asset names.
+`"C:\Program Files\GitHub CLI\gh.exe" release create <tag> <jars> -R laurensanp/siris --title "SIRIS <version>
+(Minecraft 26.3)" --latest --notes-file <file>` (gh is logged in as laurensanp). Auto mode may block it unless the user
+approved that exact release; then ask, or give the user the PowerShell command (`& "C:\Program Files\GitHub CLI\gh.exe"
+release create ...`). Vitrail and Voxy are never attached (link to Modrinth). Next release: bump `version` in
+`mod/build.gradle` (and `viris/build.gradle`), keep the asset names, attach the other mod's latest jar unchanged.
+
+Modrinth (token `MODRINTH_TOKEN` in `.env`, API v2, header `Authorization: <token>`): `siris-dlss` (id NLzgnD4s) and
+`viris` (id IHYZKsvL, created 2026-11-01 by API: POST /v2/project as draft with icon, then PATCH /v3/version
+`environment: client_only` (else "select_environment" blocks) and PATCH /v2/project `status: processing`). Both still
+waiting for review. New version: POST /v2/version multipart (`data` JSON + `file`; version_type release, game_versions
+26.3, loaders fabric, featured; SIRIS deps: Sodium required, Vitrail + Mod Menu optional; VIRIS deps: Voxy 0.2.20
+version iIrM8ZKQ, Sodium, Fabric API required, Vitrail + SIRIS optional), then PATCH /v3/version `client_only`.
+Galleries: siris-dlss 6 images, viris 4 (midday shots, no K grid visible).
+
+Newest first:
+- v1.1.4 (2026-11-02, Latest): LODs keep colour on rejoin (join-reload skip off with VIRIS); + viris-0.3.3. Modrinth
+  j6taTT1r.
+- viris-v0.3.3 (2026-11-02): LODs survive shader reloads/toggles; + siris-1.1.3. Modrinth o1vibgM3.
+- viris-v0.3.2 (2026-11-01): pack sees LOD depth only with colour; Voxy pipeline re-requested. Modrinth ieYulT8H.
+- viris-v0.3.1 (2026-11-01): no ghost LODs after Voxy is switched off. Modrinth auUQfWsM.
+- v1.1.3 (2026-11-01): DLSS model M by default (K's grid over pack noise); + viris-0.3.0. Modrinth 4vXqzP0M.
+- viris-v0.3.0 (2026-11-01): voxy-vulkan renamed VIRIS, shader pack LODs; + siris-1.1.2.
+- v1.1.2 (2026-10-31): first as SIRIS (rename). v1.1.1 (2026-10-31): orange theme `#FF6A3D` (amber `#FFB547`, ground
+  `#17140F`; theme colour for anything new), icon in Sodium's list. v1.1.0 (2026-10-31, created by the user): first
+  1.x, PYRAXIS icon (frame stack). Notes in `mod/build/release-notes-1.1.x.md`.
+- v0.7.7 (2026-10-31): x jitter sign, Lunar Turbo entity modes off. v0.7.6/0.7.5 (2026-10-30): wWaypoints icons with FG,
+  Vitrail join reload skipped for tagless packs. v0.7.4: pack TAA off, animated dither, RCAS, entity motion vectors.
+  v0.7.3/0.7.2: LunarCompat. v0.7.1: pacing without VSync, vertex buffer reuse. v0.7.0 (2026-10-27): first with
+  Vitrail. v0.5.0/v0.6.0: old Iris fork era (notes start with an "Outdated" line).
 
 ## Working with the user
 

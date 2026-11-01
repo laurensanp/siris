@@ -170,7 +170,11 @@ world's terrain. The picture is Voxy's own (textures, lighting, water, fog, SSAO
   4060 Ti: about 0.7 ms per rendered frame (230 -> 200 rendered fps).
 * **With a shader pack (Vitrail):** packs with Voxy support (`voxy.json` in the pack: Complementary, BSL, Photon,
   Solas, MakeUp, ...) draw the LODs with their own code, as under Iris. Not yet: shadows on LODs (the pack's
-  shadow maps aren't passed in), packs that render into vanilla depth.
+  shadow maps aren't passed in), packs that render into vanilla depth. The LODs stay after reloading or toggling
+  the pack and after switching Voxy off and on (VIRIS 0.3.1-0.3.3); with SIRIS 1.1.4 they also keep their colour
+  when joining a world again (before, every join after the first showed grey outlines until a pack reload).
+* Works with [Voxy Server Side](https://modrinth.com/plugin/voxy-server-side) (LODs sent by the server): it
+  feeds Voxy's own data, VIRIS only draws.
 * Known: with DLSS upscaling, thin dark lines can show over LOD water.
 * Needs a GPU driver with OpenGL/Vulkan interop (`GL_EXT_memory_object_win32`, `GL_EXT_semaphore_win32`),
   Windows only. SIRIS is not required, but VIRIS is tested with it.
@@ -190,7 +194,8 @@ Generation), 2026-10-27:
 | ~146 | ~123 | ~176 | ~217 | ~122 (~245 shown) |
 
 That is 5–10 % more than the old Iris fork in the same scene. The game is GPU-bound here; DLSS itself costs
-~2 ms per frame at 1080p with model K (E is ~1 ms cheaper, L ~1.8 ms more), Frame Generation ~3 ms per
+~2 ms per frame at 1080p with model K (M, the default since 1.1.3, ~1 ms more; E ~1 ms cheaper, L ~1.8 ms more),
+Frame Generation ~3 ms per
 rendered frame. A lower render distance helps a lot. Numbers vary with the scene and with whatever else
 runs on the PC.
 
@@ -258,7 +263,8 @@ gradlew runClient -PtestWorld=vulkan-test
 
 joins (first time: creates, fixed seed) a test world, saves `run/screenshots/dlss-test.png` after 200
 ticks and quits. Options: `-PtestCommands="time set 1500;weather clear;tp @p -36 84 18 -90 20"` (chat
-commands after joining), `-PtestPitch=40`, `-PtestTicks=900`, `-PwindowSize=1920x1080`, `-PdlssBenchmark`
+commands after joining), `-PtestPitch=40`, `-PtestTicks=900`, `-PwindowSize=1920x1080`, `-PtestHideGui=true`
+(F1, clean shots), `-PtestRejoin=300` (leaves the world after 300 ticks and joins it again), `-PdlssBenchmark`
 (cycles DLSS modes, logs fps as `SIRIS benchmark:`), `-PdlssOff` (DLSS off, still on Vulkan),
 `-PdlssScreen=mod|sodium|sodium2` (opens the settings), `-PdlssDebug=spin|walk` (camera motion + Frame Generation frame capture into `run/siris/captures`).
 Look at the screenshot. If Gradle says "Could not connect to the Gradle daemon", run `gradlew --stop` and
@@ -322,10 +328,11 @@ submit signals a timeline semaphore ──────────────�
   wWaypoints places its icons with its own FOV math, which can drift slightly against the world away from
   the screen centre (also without DLSS).
 * Joining a world: Vitrail reads and compiles the shader pack a second time so block tags resolve; for packs
-  without block tags (e.g. Solas) the mod skips that second read, which shortens the join hitch.
+  without block tags (e.g. Solas) the mod skips that second read, which shortens the join hitch. With VIRIS
+  installed it doesn't (the LODs lost their colour on the second join otherwise).
 * Motion vectors follow the camera and moving entities (position and body turn, nearest 32), not animated
   parts (legs, heads), water waves or particles: those can smear a little.
-* Voxy LODs are off while a shader pack is active, and cast no shadows.
+* Voxy LODs (VIRIS) get no shadows from shader packs yet; packs without Voxy support show no LODs.
 * Only Windows + NVIDIA.
 
 ## License
