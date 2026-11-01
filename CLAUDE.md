@@ -62,9 +62,15 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   block atlas from sprite images (texels start at u0/v0 = x + padding, not getX). Rows: RenderPearl's Vulkan images
   keep GL's row order, no flip. Patched Voxy hooks: device check, Iris hook, Sodium draw hook (`postApply`),
   `LightMapHelper.getLightmapTextureId`, `SoftwareModelTextureBakery.setupTexture`.
-  Verified 2026-11-01 without DLSS: day and night look like Voxy on OpenGL (SIRIS `enabled=false` in the dev run).
-  Not verified: DLSS/FG together with Voxy and fps (the test PC was locked and Lunar's game held ~4 GB VRAM: GL
-  frames took up to 1.4 s with 474 evictions, RenderPearl's 5 s submit timeout hit). Tried and dropped: timeline
+  Verified 2026-11-01: day and night look like Voxy on OpenGL; with DLSS Quality + FG x2 at 1080p, render distance
+  8: Voxy ~0.85 ms render thread + ~0.7 ms GL per frame, 200 vs 230 rendered fps (Voxy rendering off). Lunar
+  (`DLSS Optimized`, siris-1.1.2, backup `mods-backup-2026-11-01-voxy/`): Voxy 0.2.20 + voxy-vulkan 0.2.0 run, LODs
+  seamless past render distance 8, FG ~357/180 fps (shaders off; the profile has Complementary on, so LODs are off
+  there by default). Open: two thin dark horizontal lines over LOD water only with DLSS upscaling (not in the raw
+  frame, DLAA bypass) - probably LOD depth/motion vectors. Hangs seen earlier were VRAM: with Lunar's game open
+  (~4 GB) GL frames took up to 1.4 s with 474 evictions and RenderPearl's 5 s submit timeout hit; close Lunar's game
+  before dev tests. SIRIS side note: closing Lunar's window once wrote a watchdog crash report
+  (`DlssNative.destroyPresenter` hung on shutdown). Tried and dropped: timeline
   semaphores (NVIDIA 617 passed only GL's first signal to Vulkan), GL fence + CPU wait before submit (hung with
   DLSS), reading back a shared texture on the GL side (glGetTextureImage, hung). `-Dvoxyvulkan.timing=true` logs
   Voxy CPU/GL time, free VRAM and evictions. With a shader pack the LODs are still skipped (`ShaderPacks.active()`).

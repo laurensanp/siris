@@ -164,7 +164,9 @@ it opens a hidden OpenGL context next to the game's Vulkan device, Voxy draws in
 (textures, lighting, water, fog, SSAO), not an imitation.
 
 * **Without a shader pack: draws like Voxy on OpenGL** (dev world 2026-11-01, day and night compared with
-  Voxy on the OpenGL backend). DLSS together with Voxy and the frame rate are not verified yet.
+  Voxy on the OpenGL backend), also with DLSS + Frame Generation and in Lunar Client. Cost at 1080p on a
+  4060 Ti: about 0.7 ms per rendered frame (230 -> 200 rendered fps).
+* Known: with DLSS upscaling, thin dark lines can show over LOD water.
 * **With a shader pack (Vitrail): LODs are switched off** for now.
 * Needs a GPU driver with OpenGL/Vulkan interop (`GL_EXT_memory_object_win32`, `GL_EXT_semaphore_win32`),
   Windows only.
