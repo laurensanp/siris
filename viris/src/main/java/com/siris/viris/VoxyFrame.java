@@ -260,6 +260,9 @@ public final class VoxyFrame {
 
     /** Called right before the game opens its opaque world pass on {@code main}. */
     public static void beforeOpaquePass(RenderTarget main) {
+        // Only this frame's LODs count: without a new set (Voxy switched off in its settings, nothing drawn) the
+        // pack's vxDepthTex reads far, else it shaded last frame's LOD depth over the sky.
+        packReadSet = null;
         if (failed || !GlContext.ready() || projection == null) {
             return;
         }

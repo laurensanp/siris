@@ -101,6 +101,12 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   inputs for the patch (shadow maps, noisetex, colortex13/18/19, depthtex1 are dummies: LODs get no shadows), patch
   depth samplers during the translucent pass, renderToVanillaDepth packs. Exceptions in these hooks would stop Vitrail:
   they only switch the LODs off.
+  Ghost LODs (0.3.1, 2026-11-01, user's server shot): switching Voxy off in its settings calls
+  `voxy$shutdownRenderer`, `IVoxyRenderSystemHolder.getNullable()` turns null and VoxyFrame drew nothing, but
+  `packReadSet` kept the last set, so the pack's vxDepthTex still saw LOD depth and shaded grey terrain outlines over
+  the sky. `beforeOpaquePass` now clears `packReadSet` every frame. Reproduced in dev with a temporary
+  shutdown-after-N-frames hook (not committed). Possibly also the "grey/black-white background" from the user's first
+  server shot.
   Voxy is All-Rights-Reserved: never pack or modify its jar (runtime mixins only).
 - **Solved (2026-10-27):** in Lunar the FPS dropped after some playtime and recovers later (old fork build and Vitrail alike).
   2026-10-27 finding: Lunar gives the game 3 GB heap ("Allocated Memory: 3072" in crash headers), runs ZGC; on a
