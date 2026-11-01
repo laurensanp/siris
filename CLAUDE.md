@@ -280,6 +280,13 @@ v0.7.1 (2026-10-27): pacing without VSync, vertex buffer reuse, diagnosticRecord
 attached). v0.7.2 (2026-10-30): LunarCompat (plain Vitrail jar in Lunar, threaded present off); full release marked "Latest" (user asked). v0.7.3 (2026-10-30, Latest): `lunarCompat`
 kept in `iris-dlss.properties` (0.7.2's `DlssConfig.save` dropped the key, so `lunarCompat=false` held one start). v0.7.4 (2026-10-30, Latest): pack TAA off also when shaders start disabled, animated pack dither, RCAS
 sharpening, no jitter on join, entity motion vectors, FG matrices in double, memory notice (same voxy-vulkan 0.1.1).
+viris-v0.3.0 (2026-11-01, Latest, title "VIRIS 0.3.0 + SIRIS 1.1.2 (Minecraft 26.3)"): `viris-0.3.0+mc26.3.jar` (rename,
+shader pack LODs) + unchanged `siris-1.1.2+mc26.3.jar`.
+Modrinth (token `MODRINTH_TOKEN` in `.env`, API v2 with header `Authorization: <token>`): `siris-dlss` (id NLzgnD4s,
+1.1.2) and `viris` (id IHYZKsvL, 0.3.0, created 2026-11-01 by API: POST /v2/project as draft with icon, POST /v2/version
+with dependencies Voxy/Sodium/Fabric API required, Vitrail/SIRIS optional, then PATCH /v3/version `environment:
+client_only` (else "select_environment" blocks) and PATCH /v2/project `status: processing`). Both waiting for review.
+New Modrinth versions: same POST /v2/version (version_type release, game_versions 26.3, loaders fabric).
 v1.1.1 (2026-10-31): orange theme `#FF6A3D` (the icon's ember) for the settings screen headers, Sodium page theme
 (`setBaseThemeRGB`) and README badges; icon in Sodium's list (`setNonTintedIcon(iris-dlss:icon.png)`). Notes in
 `mod/build/release-notes-1.1.1.md`. Theme colour for anything new: `#FF6A3D` (amber `#FFB547`, ground `#17140F`).
