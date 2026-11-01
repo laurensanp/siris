@@ -79,7 +79,7 @@ public class SodiumOptions implements ConfigEntryPoint {
                         .setName(text("Model"))
                         .setTooltip(SodiumOptions::presetTooltip)
                         .setImpact(OptionImpact.MEDIUM)
-                        .setDefaultValue(DlssConfig.Preset.K)
+                        .setDefaultValue(DlssConfig.Preset.M)
                         .setEnabledProvider(SodiumOptions::dlssOn, ENABLED)
                         .setElementNameProvider(p -> text(p.label))
                         .setBinding(value -> DlssConfig.preset = value, () -> DlssConfig.preset)
@@ -214,9 +214,9 @@ public class SodiumOptions implements ConfigEntryPoint {
 
     static Component presetTooltip(DlssConfig.Preset preset) {
         return text(switch (preset) {
-            case K -> "K: transformer model, best detail. Default.";
+            case K -> "K: transformer model, sharp, but turns shader pack noise (light shafts, fog) into a fine grid.";
             case L -> "L: second-generation transformer, NVIDIA's default for Ultra Performance. Most expensive.";
-            case M -> "M: second-generation transformer, NVIDIA's default for Performance.";
+            case M -> "M: second-generation transformer, cleanest picture with shader packs (~1 ms more than K). Default.";
             case J -> "J: transformer like K, slightly less ghosting, a bit more flicker.";
             case E -> "E: older CNN model. Cheapest (more fps), a bit softer.";
             case DEFAULT -> "Let the driver / NVIDIA app choose the model.";

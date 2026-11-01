@@ -234,6 +234,11 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   F2 burst, then dev Custom 80 %: 8 testShots, floor rms 0.7-2.3 with +x vs 0.42-0.50 and no shift with -x; y sign made
   no difference). `DlssUpscaler.reportedJitterX()` now reports -jitterX (SR and FG params); config jitterSign* stay a
   diagnostic on top (1.0 = correct). User confirmed in Lunar.
+- Grid of fine dashes over fog / light shafts with shader packs (2026-11-01, user's server shot): DLSS model K turns the
+  packs' animated noise (Complementary VL mainly, also fog) into a 2-render-px lattice. Same view (dev, sunrise, y 150,
+  Complementary, Quality + FG): K grid; E grainy, no grid; M clean (~1 ms more, 121 vs 135 rendered); no DLSS clean;
+  unchanged without Voxy/VIRIS, without sharpening, with DLAA, without jitter, with pack TAA on. Default model is now
+  M (listed first); `configVersion=2` in siris.properties, older configs with `preset=k` move to M once.
 - Shaking for ~2 s after joining: history reset for 60 frames (new level) showed the raw jitter; jitter is now 0
   while `resetFrames > 0`.
 - FG smear at tree/block edges while turning (2026-10-30): reproduced with `-Dsiris.debugSpin=6` (6 deg per

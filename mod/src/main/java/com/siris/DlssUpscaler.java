@@ -261,7 +261,7 @@ public final class DlssUpscaler {
     private static int outputHeight;
     private static boolean depthInverted;
     private static DlssConfig.Quality appliedQuality = DlssConfig.Quality.QUALITY;
-    private static DlssConfig.Preset appliedPreset = DlssConfig.Preset.K;
+    private static DlssConfig.Preset appliedPreset = DlssConfig.Preset.M;
     private static int appliedRenderScale;
     private static String failureReason = "";
 

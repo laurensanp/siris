@@ -51,11 +51,14 @@ public final class DlssConfig {
         }
     }
 
-    /** NVSDK_NGX_DLSS_Hint_Render_Preset. */
+    /**
+     * NVSDK_NGX_DLSS_Hint_Render_Preset. M is the default: K turned the shader packs' animated noise (light shafts,
+     * fog) into a fine grid of dashes, M and E don't.
+     */
     public enum Preset {
-        K(11, "K (Transformer, best)", "k"),
+        M(13, "M (Transformer 2, best)", "m"),
+        K(11, "K (Transformer)", "k"),
         L(12, "L (Transformer 2)", "l"),
-        M(13, "M (Transformer 2, performance)", "m"),
         J(10, "J (Transformer, less ghosting)", "j"),
         E(5, "E (CNN, fastest)", "e"),
         DEFAULT(0, "Driver default", "default");
@@ -138,7 +141,7 @@ public final class DlssConfig {
 
     public static boolean enabled = true;
     public static Quality quality = Quality.QUALITY;
-    public static Preset preset = Preset.K;
+    public static Preset preset = Preset.M;
     /** Negative texture LOD bias so textures keep output-resolution detail (DLSS guideline). */
     public static boolean textureLodBias = true;
     /** Pixels closer than this (blocks) are treated as the view-locked hand: zero motion. */
@@ -213,7 +216,11 @@ public final class DlssConfig {
         }
         enabled = Boolean.parseBoolean(p.getProperty("enabled", "true"));
         quality = parse(Quality.values(), p.getProperty("quality"), Quality.QUALITY);
-        preset = parse(Preset.values(), p.getProperty("preset"), Preset.K);
+        preset = parse(Preset.values(), p.getProperty("preset"), Preset.M);
+        if (parseFloat(p.getProperty("configVersion"), 1.0F) < 2.0F && preset == Preset.K) {
+            // K was the default up to 1.1.2: move those configs to the new default once.
+            preset = Preset.M;
+        }
         textureLodBias = Boolean.parseBoolean(p.getProperty("textureLodBias", "true"));
         handDistance = parseFloat(p.getProperty("handDistance"), 0.8F);
         jitterSignX = parseFloat(p.getProperty("jitterSignX"), 1.0F);
@@ -236,10 +243,11 @@ public final class DlssConfig {
         }
         try (Writer writer = Files.newBufferedWriter(file)) {
             writer.write("# SIRIS - also editable in game (Mod Menu > SIRIS)\n");
+            writer.write("configVersion=2\n");
             writer.write("enabled=" + enabled + "\n");
             writer.write("# dlaa | quality | balanced | performance | ultra_performance | custom (renderScale %)\n");
             writer.write("quality=" + quality.key + "\n");
-            writer.write("# k | l | m | j | e | default\n");
+            writer.write("# m | k | l | j | e | default\n");
             writer.write("preset=" + preset.key + "\n");
             writer.write("textureLodBias=" + textureLodBias + "\n");
             writer.write("handDistance=" + handDistance + "\n");

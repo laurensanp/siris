@@ -119,7 +119,7 @@ apply immediately.
 | DLSS | On / off. Off renders natively (still on Vulkan until the next start). |
 | Mode | DLAA (100 %), Quality (67 %), Balanced (58 %), Performance (50 %), Ultra Performance (33 %), **Custom** |
 | Render resolution | Only for Custom: 33 – 100 % per axis |
-| Model | K (transformer, best detail, default), L / M (second-generation transformer, NVIDIA's defaults for Ultra Performance / Performance, more expensive), J (less ghosting), E (CNN, cheapest), driver default |
+| Model | M (second-generation transformer, default: cleanest with shader packs, ~1 ms more than K), K (transformer; turns shader pack noise such as light shafts into a fine grid), L (NVIDIA's default for Ultra Performance, most expensive), J (less ghosting), E (CNN, cheapest, grainier), driver default |
 | Sharpening | Robust contrast-adaptive sharpening (AMD FSR 1 RCAS) after DLSS, 0 – 100 %; holds back on fine repeating noise, so no grid on leaves or sand |
 | Frame Generation | Generated frames between rendered ones (RTX 40/50). Needs the presenter. Best with VSync and at least ~60 fps rendered without it. |
 | Generated frames | 2x, 3x, 4x. Only what the GPU supports is offered: 3x / 4x (DLSS 4 multi frame generation) need an RTX 50; on RTX 40 the option shows 2x and is greyed out. |
