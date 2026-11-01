@@ -315,7 +315,7 @@ Grey LODs on the server = second join (user: first join fine, second corrupted, 
 in SIRIS 1.1.4 (no skip when `viris` is loaded). Reproduced and verified with `-PtestRejoin=300` (DevTest leaves the
 world after N ticks and joins again). A delayed VIRIS pipeline rebuild after join did not help (dropped).
 SIRIS 1.1.4 (commit 8d42dbd) is installed in all three Lunar profiles (backups `mods-backup-2026-11-02-114/`); GitHub
-release/Modrinth upload pending the user's go (auto mode blocked `gh release create`).
+release v1.1.4 (Latest, with viris-0.3.3) and Modrinth siris-dlss 1.1.4 published 2026-11-02 after the user's go.
 viris-v0.3.2 (2026-11-01, "VIRIS 0.3.2 + SIRIS 1.1.3"): no LOD outlines after rejoining; Modrinth viris 0.3.2
 (id ieYulT8H). Lunar surv and DLSS Optimized have viris-0.3.2 (backups `mods-backup-2026-11-01-viris032/`); DLSS Optimized started:
 singleplayer with Complementary, LODs in colour to the horizon, 203/100 fps. A real rejoin on the server not tried.
@@ -331,7 +331,7 @@ VIRIS gallery: 4 images (midday, no grid visible), siris-dlss gallery: 6 images.
 viris-v0.3.0 (2026-11-01, title "VIRIS 0.3.0 + SIRIS 1.1.2 (Minecraft 26.3)"): `viris-0.3.0+mc26.3.jar` (rename,
 shader pack LODs) + unchanged `siris-1.1.2+mc26.3.jar`.
 Modrinth (token `MODRINTH_TOKEN` in `.env`, API v2 with header `Authorization: <token>`): `siris-dlss` (id NLzgnD4s,
-1.1.3) and `viris` (id IHYZKsvL, 0.3.3, created 2026-11-01 by API: POST /v2/project as draft with icon, POST /v2/version
+1.1.4) and `viris` (id IHYZKsvL, 0.3.3, created 2026-11-01 by API: POST /v2/project as draft with icon, POST /v2/version
 with dependencies Voxy/Sodium/Fabric API required, Vitrail/SIRIS optional, then PATCH /v3/version `environment:
 client_only` (else "select_environment" blocks) and PATCH /v2/project `status: processing`). Both waiting for review.
 New Modrinth versions: same POST /v2/version (version_type release, game_versions 26.3, loaders fabric).
