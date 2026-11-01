@@ -3,7 +3,7 @@
   "id": "voxy-vulkan",
   "version": "${version}",
   "name": "Voxy Vulkan",
-  "description": "Draws Voxy's LODs on Minecraft's Vulkan renderer. Uses the installed Voxy for its LOD data and ingest; the drawing is this mod's own.",
+  "description": "Runs Voxy's own LOD renderer on Minecraft's Vulkan renderer: Voxy draws through a hidden OpenGL context into images shared with Vulkan. Voxy itself is used unchanged, as installed by the player.",
   "authors": [
     "laurensanp"
   ],

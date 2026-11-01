@@ -6,13 +6,18 @@
   "compatibilityLevel": "JAVA_25",
   "client": [
     "DefaultChunkRendererMixin",
-    "FogRendererMixin",
+    "FrontendGpuDeviceAccessor",
     "LevelRendererMixin",
+    "LightMapHelperMixin",
     "MinecraftMixin",
+    "RenderSystemMixin",
+    "SodiumWorldRendererMixin",
+    "SoftwareModelTextureBakeryMixin",
     "SpriteContentsAccessor",
-    "VoxyClientMixin",
-    "VoxyConfigMixin",
-    "VoxyInstanceMixin"
+    "TextureAtlasAccessor",
+    "VulkanFeatureSetsMixin",
+    "VulkanGpuTextureAccessor",
+    "VulkanGpuTextureMixin"
   ],
   "injectors": {
     "defaultRequire": 1

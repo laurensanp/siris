@@ -5,13 +5,13 @@ Resolution + Frame Generation inside the game's own Vulkan renderer (RenderPearl
 **Vitrail** (separate mod, modrinth `vitrail-shaders`, github avpbynf/Vitrail-Shaders, LGPL-3.0, not ours,
 never commit or ship it). `README.md` lists everything a player or developer needs and where it comes from.
 
-Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. Voxy LODs (voxy-vulkan) paused.
+Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. Voxy LODs (voxy-vulkan) in progress (1:1 port via GL interop).
 
 | Path | What |
 |---|---|
 | `dlss-bridge/` | native C++ bridge (`siris.dll`): NGX, DLSS SR, presenter + DLSS-G, `dlss_probe.exe` |
 | `mod/` | the Fabric mod (Java), packs the bridge + NVIDIA DLLs into its jar |
-| `voxy-vulkan/` | separate mod: Voxy LODs drawn on Vulkan (paused) |
+| `voxy-vulkan/` | separate mod: Voxy's own renderer on Vulkan via GL interop |
 | `testpacks/` | own small GLSL test packs (from the old Iris port) |
 | `libs/` (ignored) | compile-only jars: `sodium-fabric-0.9.2+mc26.3.jar`, `voxy-0.2.20-beta.jar` (Modrinth) |
 | `mod/run/` (ignored) | test game dir: Sodium, Fabric API, Vitrail in `mods/`, packs, `saves/vulkan-test`, `vitrail/pack.txt` |
@@ -48,13 +48,27 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   Vitrail's hand is too bright at night. Could be reported upstream (ask the user first).
 - Benchmark 2026-10-27, 1080p, Solas, render distance 8, static view, 4060 Ti, rendered fps: SR+FG 122 (245 shown),
   Quality 176, Performance 217, DLAA 123, off 146 (old fork in the same scene: 115/161/196/114/133).
-- voxy-vulkan (paused): stage 1 (no shader pack) works; with a pack active the LODs are skipped
-  (`ShaderPacks.active()` = Vitrail's `PackChain.drawingPack()` by reflection). Design: Voxy's CPU side used as is;
-  `VoxyVulkanMixinPlugin.postApply` turns off Voxy's Vulkan device check and its GL Iris hook, `VoxyClientMixin`
-  replaces `initVoxyClient`, `VoxyConfigMixin` keeps Voxy's GL renderer off; own `LodScheduler`/`LodMesher`/
-  `LodRenderer` drawn at the end of Sodium's SOLID pass, fog pushed out (`FogRendererMixin`). Section voxel index
-  `y<<10|z<<5|x`, mapping id: light bits 56-63, biome 47-55, block 27-46. Voxy is All-Rights-Reserved: never pack
-  or modify its code.
+- voxy-vulkan 0.2.0 (2026-11-01, user asked for a 1:1 port; the own LodRenderer of 0.1.x is gone): Voxy's own
+  GL renderer runs unchanged on a hidden SDL OpenGL 4.6 context (`GlContext`, made current at
+  `RenderSystem.initRenderer` RETURN order 800, before Voxy's own init at 900). Voxy's only draw entry is
+  `VoxyRenderSystem.setupViewport(proj, modelView, fog, w, h, camXYZ)` + `renderOpaque(viewport, depthGlTex,
+  colorGlTex)`; `VoxyFrame` calls it right before the game's "Solid" pass (`LevelRendererMixin` on
+  `lambda$addMainPass$0`, matrices from `SodiumWorldRenderer.prepareChunkRendering`) into shared images over an
+  empty picture, then a Vulkan pass writes colour (blend ONE, 1-srcA) and depth where Voxy drew; terrain draws
+  over them by depth (= Voxy's stencil). Shared images: RenderPearl textures from a VMA pool with exportable
+  dedicated memory (`VulkanGpuTextureMixin`, `Interop`), imported with GL_EXT_memory_object_win32; device gets
+  VK_KHR_external_memory/semaphore_win32 as an optional FeatureSet. Three image sets in turn, binary semaphores per
+  set (glDone/vkDone with texture lists). Lightmap: shared 16x16 copy per set. Atlas: `AtlasReader` rebuilds the
+  block atlas from sprite images (texels start at u0/v0 = x + padding, not getX). Rows: RenderPearl's Vulkan images
+  keep GL's row order, no flip. Patched Voxy hooks: device check, Iris hook, Sodium draw hook (`postApply`),
+  `LightMapHelper.getLightmapTextureId`, `SoftwareModelTextureBakery.setupTexture`.
+  Verified 2026-11-01 without DLSS: day and night look like Voxy on OpenGL (SIRIS `enabled=false` in the dev run).
+  Not verified: DLSS/FG together with Voxy and fps (the test PC was locked and Lunar's game held ~4 GB VRAM: GL
+  frames took up to 1.4 s with 474 evictions, RenderPearl's 5 s submit timeout hit). Tried and dropped: timeline
+  semaphores (NVIDIA 617 passed only GL's first signal to Vulkan), GL fence + CPU wait before submit (hung with
+  DLSS), reading back a shared texture on the GL side (glGetTextureImage, hung). `-Dvoxyvulkan.timing=true` logs
+  Voxy CPU/GL time, free VRAM and evictions. With a shader pack the LODs are still skipped (`ShaderPacks.active()`).
+  Voxy is All-Rights-Reserved: never pack or modify its jar (runtime mixins only).
 - **Solved (2026-10-27):** in Lunar the FPS dropped after some playtime and recovers later (old fork build and Vitrail alike).
   2026-10-27 finding: Lunar gives the game 3 GB heap ("Allocated Memory: 3072" in crash headers), runs ZGC; on a
   server with Solas the old generation grows ~10 MB/s to ~2.3 GB plus ~600 MB young, so the heap sits at the limit

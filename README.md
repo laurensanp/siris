@@ -155,18 +155,19 @@ Known with Solas 3.8 on Vitrail 0.13.0:
 
 Vitrail's own compatibility table: [docs/compatibility.md](https://github.com/avpbynf/Vitrail-Shaders/blob/main/docs/compatibility.md).
 
-## Voxy LODs on Vulkan (paused)
+## Voxy LODs on Vulkan (in progress)
 
 [Voxy](https://modrinth.com/mod/voxy) only renders through OpenGL and refuses the Vulkan backend.
-[`voxy-vulkan/`](voxy-vulkan) is a separate small mod that makes it work on Vulkan without changing Voxy:
-Voxy keeps its storage, LOD import ("ingest") and world engine, its OpenGL renderer is never started, and
-voxy-vulkan draws the LOD sections with an own Vulkan renderer (sections picked by distance, meshed off the
-render thread, block texture colours with biome tint, fog pushed out to the LOD distance).
+[`voxy-vulkan/`](voxy-vulkan) is a separate small mod that runs Voxy's own, unchanged renderer on Vulkan:
+it opens a hidden OpenGL context next to the game's Vulkan device, Voxy draws into images both APIs share
+(GL/Vulkan interop), and the game blends them in before the world's terrain. The picture is Voxy's own
+(textures, lighting, water, fog, SSAO), not an imitation.
 
-* **Without a shader pack: works** (tested 2026-10-27 in a dev world and in Lunar Client).
-* **With a shader pack (Vitrail): LODs are switched off.** Drawing them would need the pack's own
-  programs; this work is paused. Vitrail supports Distant Horizons instead.
-* LODs cast no shadows.
+* **Without a shader pack: draws like Voxy on OpenGL** (dev world 2026-11-01, day and night compared with
+  Voxy on the OpenGL backend). DLSS together with Voxy and the frame rate are not verified yet.
+* **With a shader pack (Vitrail): LODs are switched off** for now.
+* Needs a GPU driver with OpenGL/Vulkan interop (`GL_EXT_memory_object_win32`, `GL_EXT_semaphore_win32`),
+  Windows only.
 
 Install: Voxy 0.2.20-beta (Modrinth, needs Fabric API) and `voxy-vulkan-*.jar` (attached to the
 [releases](https://github.com/laurensanp/siris/releases), experimental) in `mods/`. Voxy is All-Rights-Reserved: voxy-vulkan contains none of its code and

@@ -18,15 +18,15 @@ import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 /**
- * Patches two of Voxy's mixin handlers after they are merged into their targets (our mixins on the same
+ * Patches three of Voxy's mixin handlers after they are merged into their targets (our mixins on the same
  * targets have a higher priority, so they are applied later):
  * <ul>
  * <li>Voxy wraps the creation of the game's graphics device and throws for the Vulkan backend, so the game
  * falls back to OpenGL: its {@code instanceof VulkanBackend} test is replaced by false.</li>
- * <li>Voxy's Iris hook in {@code LevelRenderer} calls OpenGL directly (glViewport), which aborts the game on
- * Vulkan: it returns at once there.</li>
+ * <li>Voxy's Iris hook in {@code LevelRenderer} returns at once on Vulkan (no Iris there).</li>
+ * <li>Voxy's draw hook in Sodium's chunk renderer reads the game's targets as GL textures: it returns at
+ * once on Vulkan, {@link VoxyFrame} calls the same Voxy methods with shared images instead.</li>
  * </ul>
- * Nothing else of Voxy's code changes.
  */
 public class VoxyVulkanMixinPlugin implements IMixinConfigPlugin {
 
@@ -63,6 +63,10 @@ public class VoxyVulkanMixinPlugin implements IMixinConfigPlugin {
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
         if (targetClassName.equals("net.minecraft.client.renderer.LevelRenderer")) {
             skipOnVulkan(targetClass, "voxy$injectIrisCompat");
+            return;
+        }
+        if (targetClassName.equals("net.caffeinemc.mods.sodium.client.render.chunk.DefaultChunkRenderer")) {
+            skipOnVulkan(targetClass, "voxy$injectRender");
             return;
         }
         if (!targetClassName.equals("net.minecraft.client.Minecraft")) {
