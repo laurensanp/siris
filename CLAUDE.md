@@ -74,6 +74,21 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. V
   semaphores (NVIDIA 617 passed only GL's first signal to Vulkan), GL fence + CPU wait before submit (hung with
   DLSS), reading back a shared texture on the GL side (glGetTextureImage, hung). `-Dvoxyvulkan.timing=true` logs
   Voxy CPU/GL time, free VRAM and evictions. With a shader pack the LODs are still skipped (`ShaderPacks.active()`).
+  Shader packs (2026-11-01, milestone 1): packs with Voxy support (`shaders/<world>/voxy.json` + `voxy_opaque.glsl`/
+  `voxy_translucent.glsl`: Complementary, BSL, Photon, Solas, MakeUp...) draw the LODs with their own code, as under
+  Iris. `pack/PackPatch` reads the patch with Vitrail's IncludeExpander (place from `DimensionSet.place`,
+  `minecraft:overworld` -> `world0`), `pack/PackPipeline` builds Voxy's `IrisVoxyRenderPipelineData` without Iris
+  (Unsafe; `VoxyVulkanMixinPlugin` strips its Iris-only builder methods at load or the verifier fails), std140 uniform
+  block filled from Vitrail's `PackValues.catalog()`, `RenderPipelineFactoryMixin` makes Voxy build its
+  `IrisVoxyRenderPipeline`, block ids from Vitrail's `BlockStateIds.table`. Vitrail side (`mixin/vitrail/`): `VOXY 3`
+  define, vx* uniforms in the engine catalog (`VoxyPackUniforms`, projection un-reversed like Voxy), vxDepthTex samplers
+  bound in `PackPass.bindSamplers` to Voxy's depth converted to far = 1 (`DepthConvert`). Frame: GL draws at the main
+  pass start, Vulkan waits there (after `GeometryHold.flushIdle` + `GraphicsApi.suspendLevelPass`, Vitrail keeps
+  passes open), `PackChain.drawBeforeTranslucents` HEAD writes the LOD gbuffer targets into the pack's targets where
+  the scene depth is clear (side = first deferred step's read side), vkDone with the frame's submit. Not yet: pack
+  inputs for the patch (shadow maps, noisetex, colortex13/18/19, depthtex1 are dummies: LODs get no shadows), patch
+  depth samplers during the translucent pass, renderToVanillaDepth packs. Exceptions in these hooks would stop Vitrail:
+  they only switch the LODs off.
   Voxy is All-Rights-Reserved: never pack or modify its jar (runtime mixins only).
 - **Solved (2026-10-27):** in Lunar the FPS dropped after some playtime and recovers later (old fork build and Vitrail alike).
   2026-10-27 finding: Lunar gives the game 3 GB heap ("Allocated Memory: 3072" in crash headers), runs ZGC; on a

@@ -20,6 +20,7 @@ import com.mojang.renderpearl.api.pipeline.UniformType;
 import com.mojang.renderpearl.api.textures.FilterMode;
 import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.renderpearl.api.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.mojang.renderpearl.backend.vulkan.VulkanCommandEncoder;
 import com.mojang.renderpearl.frontend.FrontendCommandEncoder;
 import java.util.Optional;
@@ -106,7 +107,7 @@ public final class VoxyFrame {
                 case NAMESPACE + ":fullscreen" -> VERTEX_SHADER;
                 case NAMESPACE + ":composite" -> COMPOSITE_SHADER;
                 case NAMESPACE + ":lightmap" -> LIGHTMAP_SHADER;
-                default -> null;
+                default -> PACK_SHADERS.get(id.toString());
             };
         }
 
@@ -166,13 +167,64 @@ public final class VoxyFrame {
         /** Vulkan signalled vkDone and GL hasn't waited for it yet. */
         boolean vkDonePending;
 
+        /** Shader pack mode: copies of the colour targets Voxy's pack patch wrote, and its depth (far = 1). */
+        Interop.SharedTexture[] packTargets;
+        Interop.SharedTexture vxOpaque;
+        Interop.SharedTexture vxTrans;
+
         int[] glTextures() {
-            return new int[] {color.glTexture(), depth.glTexture(), lightmap.glTexture()};
+            int extra = packTargets == null ? 0 : packTargets.length + 2;
+            int[] out = new int[3 + extra];
+            out[0] = color.glTexture();
+            out[1] = depth.glTexture();
+            out[2] = lightmap.glTexture();
+            if (packTargets != null) {
+                for (int i = 0; i < packTargets.length; i++) {
+                    out[3 + i] = packTargets[i].glTexture();
+                }
+                out[3 + packTargets.length] = vxOpaque.glTexture();
+                out[4 + packTargets.length] = vxTrans.glTexture();
+            }
+            return out;
+        }
+
+        int[] layouts() {
+            int[] out = new int[glTextures().length];
+            java.util.Arrays.fill(out, EXTSemaphore.GL_LAYOUT_GENERAL_EXT);
+            return out;
+        }
+
+        void ensurePack(int count, int width, int height) {
+            if (packTargets != null && packTargets.length == count && vxOpaque.texture().getWidth(0) == width
+                && vxOpaque.texture().getHeight(0) == height) {
+                return;
+            }
+            waitForVulkan();
+            GL45C.glFinish();
+            closePack();
+            int usage = GpuTexture.USAGE_RENDER_ATTACHMENT | GpuTexture.USAGE_TEXTURE_BINDING;
+            packTargets = new Interop.SharedTexture[count];
+            for (int i = 0; i < count; i++) {
+                packTargets[i] = Interop.createTexture("Voxy pack target", usage, GpuFormat.RGBA16_FLOAT, GL45C.GL_RGBA16F, width, height);
+            }
+            vxOpaque = Interop.createTexture("Voxy depth opaque", usage, GpuFormat.R32_FLOAT, GL45C.GL_R32F, width, height);
+            vxTrans = Interop.createTexture("Voxy depth translucent", usage, GpuFormat.R32_FLOAT, GL45C.GL_R32F, width, height);
+        }
+
+        void closePack() {
+            if (packTargets != null) {
+                for (Interop.SharedTexture target : packTargets) {
+                    target.close();
+                }
+                vxOpaque.close();
+                vxTrans.close();
+                packTargets = null;
+            }
         }
 
         void waitForVulkan() {
             if (vkDonePending) {
-                EXTSemaphore.glWaitSemaphoreEXT((int) vkDone[1], new int[0], glTextures(), LAYOUTS);
+                EXTSemaphore.glWaitSemaphoreEXT((int) vkDone[1], new int[0], glTextures(), layouts());
                 vkDonePending = false;
             }
         }
@@ -196,8 +248,6 @@ public final class VoxyFrame {
     }
 
     private static final long ALL_COMMANDS = 0x10000L;
-    private static final int[] LAYOUTS = {EXTSemaphore.GL_LAYOUT_GENERAL_EXT, EXTSemaphore.GL_LAYOUT_GENERAL_EXT,
-        EXTSemaphore.GL_LAYOUT_GENERAL_EXT};
 
     /** Voxy's lightmap texture on the GL side (LightMapHelperMixin): the game's lightmap of SETS frames ago. */
     public static int lightmapGlTexture() {
@@ -210,7 +260,7 @@ public final class VoxyFrame {
 
     /** Called right before the game opens its opaque world pass on {@code main}. */
     public static void beforeOpaquePass(RenderTarget main) {
-        if (failed || !GlContext.ready() || projection == null || ShaderPacks.active()) {
+        if (failed || !GlContext.ready() || projection == null) {
             return;
         }
         VoxyRenderSystem system = IVoxyRenderSystemHolder.getNullable();
@@ -218,7 +268,16 @@ public final class VoxyFrame {
             return;
         }
         try {
-            render(system, main);
+            ensureFarView();
+            if (ShaderPacks.active()) {
+                packFrame(system, main);
+            } else if (packPipeline != null) {
+                // Shaders went off: back to Voxy's own pipeline.
+                dropPackPipeline();
+                recreateRenderer();
+            } else {
+                render(system, main);
+            }
         } catch (RuntimeException e) {
             failed = true;
             VoxyVulkan.LOGGER.error("Voxy Vulkan: drawing Voxy failed, LODs stay off for this session", e);
@@ -239,7 +298,7 @@ public final class VoxyFrame {
             system.renderOpaque(viewport, set.depth.glTexture(), set.color.glTexture());
         }
         long drawn = System.nanoTime();
-        EXTSemaphore.glSignalSemaphoreEXT((int) set.glDone[1], new int[0], set.glTextures(), LAYOUTS);
+        EXTSemaphore.glSignalSemaphoreEXT((int) set.glDone[1], new int[0], set.glTextures(), set.layouts());
         GL45C.glFlush();
         if (TIMING) {
             GL45C.glFinish();
@@ -284,6 +343,282 @@ public final class VoxyFrame {
         if (!loggedFirstFrame) {
             loggedFirstFrame = true;
             VoxyVulkan.LOGGER.info("Voxy Vulkan: Voxy draws through OpenGL into shared images ({}x{})", width, height);
+        }
+    }
+
+
+    // ---------------------------------------------------------------------------------------------
+    // Shader pack mode: Voxy's pack pipeline (the pack's own voxy_opaque/voxy_translucent code) draws the
+    // LODs' gbuffer data on GL; before the pack's deferred passes Vulkan writes it into the pack's colour
+    // targets where no block was drawn, and the pack's passes read Voxy's depth as vxDepthTexOpaque/Trans.
+    // ---------------------------------------------------------------------------------------------
+
+    private static com.siris.voxyvulkan.pack.PackPipeline packPipeline;
+    private static String packKey = "";
+    /** Set GL drew into this frame, waiting for the composite before the pack's deferred passes. */
+    private static ImageSet pendingPackSet;
+    /** Set whose depth the pack's passes read this frame; its vkDone is signalled with the frame's submit. */
+    private static ImageSet packReadSet;
+    private static boolean vkDoneAtSubmit;
+    /** Set GL drew into this frame: its vkDone goes with the frame's submit. */
+    private static ImageSet frameSet;
+    private static int packSourceDepth;
+    private static int packSourceColour;
+    private static int packSourceWidth;
+    private static int packSourceHeight;
+    private static final java.util.Map<String, CompiledRenderPipeline> PACK_COMPOSITES = new java.util.HashMap<>();
+    private static GpuTexture farTexture;
+    private static GpuTextureView farView;
+
+    /** The pipeline data Voxy's RenderPipelineFactory builds its IrisVoxyRenderPipeline from (RenderPipelineFactoryMixin). */
+    public static com.siris.voxyvulkan.pack.PackPipeline packPipelineForFactory() {
+        return ShaderPacks.active() ? packPipeline : null;
+    }
+
+    private static void packFrame(VoxyRenderSystem system, RenderTarget main) {
+        consumeUnusedPackSet();
+        com.siris.voxyvulkan.pack.VitrailBridge.Pack pack = com.siris.voxyvulkan.pack.VitrailBridge.pack();
+        if (pack == null) {
+            return;
+        }
+        int width = main.width;
+        int height = main.height;
+        String key = pack.path() + "|" + pack.chosen() + "|" + pack.profile() + "|" + pack.world() + "|" + width + "x" + height;
+        if (!key.equals(packKey)) {
+            packKey = key;
+            dropPackPipeline();
+            packPipeline = com.siris.voxyvulkan.pack.PackPipeline.create(pack, width, height);
+            VoxyVulkan.LOGGER.info("Voxy Vulkan: shader pack {} {}", pack.path().getFileName(),
+                packPipeline == null ? "has no Voxy support, LODs stay off" : "draws the LODs with its own Voxy code");
+            recreateRenderer();
+            return;
+        }
+        if (packPipeline == null || packPipeline.data().thePipeline == null) {
+            return;
+        }
+        ensureResources(width, height, main.getColorTexture().getFormat());
+        ImageSet set = current;
+        set.ensurePack(packPipeline.targets.length, width, height);
+        set.waitForVulkan();
+        ensurePackSource(width, height);
+        packPipeline.clearTargets();
+        GL45C.glClearTexImage(packSourceDepth, 0, GL45C.GL_DEPTH_COMPONENT, GL45C.GL_FLOAT, new float[] {clearDepth()});
+        Viewport<?> viewport = system.setupViewport(projection, modelView, fog, width, height, cameraX, cameraY, cameraZ);
+        if (viewport == null) {
+            return;
+        }
+        com.siris.voxyvulkan.pack.VoxyPackUniforms.update(viewport);
+        system.renderOpaque(viewport, packSourceDepth, packSourceColour);
+        for (int i = 0; i < packPipeline.targets.length; i++) {
+            GL45C.glCopyImageSubData(packPipeline.targetTextures[i], GL45C.GL_TEXTURE_2D, 0, 0, 0, 0,
+                set.packTargets[i].glTexture(), GL45C.GL_TEXTURE_2D, 0, 0, 0, 0, width, height, 1);
+        }
+        int[] depths = com.siris.voxyvulkan.pack.PackPipeline.voxyDepths(packPipeline.data().thePipeline);
+        if (depths != null) {
+            com.siris.voxyvulkan.pack.DepthConvert.run(depths[0], set.vxOpaque.glTexture(), width, height);
+            com.siris.voxyvulkan.pack.DepthConvert.run(depths[1], set.vxTrans.glTexture(), width, height);
+        } else {
+            GL45C.glClearTexImage(set.vxOpaque.glTexture(), 0, GL45C.GL_RED, GL45C.GL_FLOAT, new float[] {1, 1, 1, 1});
+            GL45C.glClearTexImage(set.vxTrans.glTexture(), 0, GL45C.GL_RED, GL45C.GL_FLOAT, new float[] {1, 1, 1, 1});
+        }
+        EXTSemaphore.glSignalSemaphoreEXT((int) set.glDone[1], new int[0], set.glTextures(), set.layouts());
+        GL45C.glFlush();
+        // Vulkan waits here, before the world pass: at the pack's deferred stage the game's level pass is
+        // still open, and no semaphore operation may go in there. vkDone follows with the frame's submit.
+        closeVitrailPasses();
+        VulkanCommandEncoder vulkan = (VulkanCommandEncoder) ((FrontendCommandEncoder) RenderSystem.getDevice().createCommandEncoder()).backend();
+        vulkan.waitSemaphore(set.glDone[0], 0L, ALL_COMMANDS);
+        pendingPackSet = set;
+        frameSet = set;
+        vkDoneAtSubmit = true;
+        frame = (frame + 1) % SETS;
+        if (sets[frame] == null) {
+            sets[frame] = new ImageSet();
+        }
+        current = sets[frame];
+        if (!loggedFirstFrame) {
+            loggedFirstFrame = true;
+            VoxyVulkan.LOGGER.info("Voxy Vulkan: the shader pack's Voxy code draws through OpenGL ({}x{})", width, height);
+        }
+    }
+
+    /**
+     * Vitrail keeps passes open across stages (the level's pass, held geometry passes such as its sky) and
+     * reopens them by itself; semaphore operations and our own passes need them closed.
+     */
+    private static void closeVitrailPasses() {
+        dev.vitrail.render.GeometryHold.flushIdle(() -> "Voxy Vulkan");
+        dev.vitrail.render.GraphicsApi.suspendLevelPass();
+    }
+
+    /** A set no composite took (the pack skipped its deferred stage) is simply dropped; its semaphores went by. */
+    private static void consumeUnusedPackSet() {
+        pendingPackSet = null;
+    }
+
+    private static void ensurePackSource(int width, int height) {
+        if (packSourceDepth != 0 && packSourceWidth == width && packSourceHeight == height) {
+            return;
+        }
+        if (packSourceDepth != 0) {
+            GL45C.glDeleteTextures(packSourceDepth);
+            GL45C.glDeleteTextures(packSourceColour);
+        }
+        packSourceDepth = GL45C.glCreateTextures(GL45C.GL_TEXTURE_2D);
+        GL45C.glTextureStorage2D(packSourceDepth, 1, GL45C.GL_DEPTH_COMPONENT32F, width, height);
+        packSourceColour = GL45C.glCreateTextures(GL45C.GL_TEXTURE_2D);
+        GL45C.glTextureStorage2D(packSourceColour, 1, GL45C.GL_RGBA8, width, height);
+        packSourceWidth = width;
+        packSourceHeight = height;
+    }
+
+    /**
+     * Right before the pack's deferred passes (PackChainMixin, outside any render pass): the LODs' gbuffer
+     * data goes into the pack's colour targets where no block was drawn.
+     */
+    public static void packComposite() {
+        if (pendingPackSet == null || packPipeline == null || failed) {
+            return;
+        }
+        try {
+            compositePack();
+        } catch (RuntimeException e) {
+            // An exception here would stop Vitrail drawing the pack: only the LODs go off.
+            failed = true;
+            pendingPackSet = null;
+            packReadSet = null;
+            VoxyVulkan.LOGGER.error("Voxy Vulkan: writing the LODs into the shader pack failed, LODs stay off for this session", e);
+        }
+    }
+
+    private static void compositePack() {
+        ImageSet set = pendingPackSet;
+        pendingPackSet = null;
+        closeVitrailPasses();
+        CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
+        packReadSet = set;
+        RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
+        int count = packPipeline.targets.length;
+        GpuTextureView[] targets = new GpuTextureView[count];
+        StringBuilder formats = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            targets[i] = com.siris.voxyvulkan.pack.VitrailBridge.gbufferTarget(packPipeline.targets[i]);
+            if (targets[i] == null) {
+                return;
+            }
+            formats.append(targets[i].texture().getFormat()).append(',');
+        }
+        CompiledRenderPipeline pipeline = PACK_COMPOSITES.computeIfAbsent(formats.toString(), k -> packCompositePipeline(targets));
+        GpuSampler nearest = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
+        com.mojang.renderpearl.api.commands.RenderPassDescriptor.Builder descriptor =
+            com.mojang.renderpearl.api.commands.RenderPassDescriptor.builder(() -> "Voxy LOD gbuffer");
+        for (GpuTextureView target : targets) {
+            descriptor.withColorAttachment(target, Optional.empty());
+        }
+        try (RenderPass pass = encoder.createRenderPass(descriptor.build())) {
+            pass.setPipeline(pipeline);
+            for (int i = 0; i < count; i++) {
+                pass.setUniform("LodTarget" + i, set.packTargets[i].view(), nearest);
+            }
+            pass.setUniform("LodOpaque", set.vxOpaque.view(), nearest);
+            pass.setUniform("LodTrans", set.vxTrans.view(), nearest);
+            pass.setUniform("SceneDepth", main.getDepthTextureView(), nearest);
+            pass.draw(3, 1, 0, 0);
+        }
+        try (RenderPass pass = encoder.createRenderPass(() -> "Voxy lightmap", set.lightmap.view(), Optional.empty())) {
+            pass.setPipeline(lightmapPipeline);
+            pass.setUniform("Lightmap", Minecraft.getInstance().gameRenderer.levelLightmap(), nearest);
+            pass.draw(3, 1, 0, 0);
+        }
+    }
+
+    private static CompiledRenderPipeline packCompositePipeline(GpuTextureView[] targets) {
+        StringBuilder shader = new StringBuilder("""
+            #version 330
+            #extension GL_ARB_separate_shader_objects : require
+            uniform sampler2D LodOpaque;
+            uniform sampler2D LodTrans;
+            uniform sampler2D SceneDepth;
+            """);
+        BindGroupLayout.Builder layout = BindGroupLayout.builder();
+        for (int i = 0; i < targets.length; i++) {
+            shader.append("uniform sampler2D LodTarget").append(i).append(";\n");
+            shader.append("layout(location = ").append(i).append(") out vec4 out").append(i).append(";\n");
+            layout.withUniform("LodTarget" + i, UniformType.COMBINED_IMAGE_SAMPLER);
+        }
+        layout.withUniform("LodOpaque", UniformType.COMBINED_IMAGE_SAMPLER)
+            .withUniform("LodTrans", UniformType.COMBINED_IMAGE_SAMPLER)
+            .withUniform("SceneDepth", UniformType.COMBINED_IMAGE_SAMPLER);
+        shader.append("""
+            void main() {
+                ivec2 p = ivec2(gl_FragCoord.xy);
+                float lod = min(texelFetch(LodOpaque, p, 0).r, texelFetch(LodTrans, p, 0).r);
+                if (lod >= 1.0 || texelFetch(SceneDepth, p, 0).r != CLEAR_DEPTH) {
+                    discard;
+                }
+            """);
+        for (int i = 0; i < targets.length; i++) {
+            shader.append("    out").append(i).append(" = texelFetch(LodTarget").append(i).append(", p, 0);\n");
+        }
+        shader.append("}\n");
+        String name = "packcomposite" + targets.length + "_" + Integer.toHexString(java.util.Arrays.hashCode(
+            java.util.Arrays.stream(targets).map(t -> t.texture().getFormat().toString()).toArray()));
+        PACK_SHADERS.put(NAMESPACE + ":" + name, shader.toString());
+        RenderPipeline.Builder builder = fullscreen(name, layout.build()).withShaderDefine("CLEAR_DEPTH", clearDepth());
+        for (int i = 0; i < targets.length; i++) {
+            builder.withColorTargetState(i, new ColorTargetState(Optional.empty(), targets[i].texture().getFormat(), ColorTargetState.WRITE_ALL));
+        }
+        return compile(builder.build());
+    }
+
+    private static final java.util.Map<String, String> PACK_SHADERS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** The view a pack's vxDepthTex sampler reads this frame (far everywhere when there is none). */
+    public static GpuTextureView vxDepthView(String sampler) {
+        if (packReadSet != null && packReadSet.vxOpaque != null) {
+            return sampler.contains("Trans") ? packReadSet.vxTrans.view() : packReadSet.vxOpaque.view();
+        }
+        return farView;
+    }
+
+    /** A 1x1 depth of 1 (far), made outside any render pass: what vxDepthTex reads without LODs. */
+    private static void ensureFarView() {
+        if (farView != null) {
+            return;
+        }
+        farTexture = RenderSystem.getDevice().createTexture("Voxy far depth", GpuTexture.USAGE_TEXTURE_BINDING
+            | GpuTexture.USAGE_COPY_DST, GpuFormat.R32_FLOAT, 1, 1, 1, 1);
+        java.nio.ByteBuffer one = org.lwjgl.system.MemoryUtil.memAlloc(4).putFloat(0, 1.0F);
+        RenderSystem.getDevice().createCommandEncoder().writeToTexture(farTexture, one, 0, 0, 0, 0, 1, 1);
+        org.lwjgl.system.MemoryUtil.memFree(one);
+        farView = RenderSystem.getDevice().createTextureView(farTexture);
+    }
+
+    /** With the frame's submit (VulkanCommandEncoderMixin): the pack's passes are done with the set's depth. */
+    public static void beforeSubmit() {
+        if (vkDoneAtSubmit && frameSet != null) {
+            vkDoneAtSubmit = false;
+            VulkanCommandEncoder vulkan = (VulkanCommandEncoder) ((FrontendCommandEncoder) RenderSystem.getDevice().createCommandEncoder()).backend();
+            vulkan.signalSemaphore(frameSet.vkDone[0], 0L, ALL_COMMANDS);
+            frameSet.vkDonePending = true;
+        }
+    }
+
+    private static void dropPackPipeline() {
+        GL45C.glFinish();
+        packReadSet = null;
+        if (packPipeline != null) {
+            packPipeline.close();
+            packPipeline = null;
+        }
+    }
+
+    /** Voxy builds its render system again (new pipeline: the pack's, or its own). */
+    private static void recreateRenderer() {
+        me.cortex.voxy.client.core.IVoxyRenderSystemHolder holder = IVoxyRenderSystemHolder.getNullableHolder();
+        if (holder != null && holder.voxy$getRenderSystem() != null) {
+            holder.voxy$shutdownRenderer();
+            holder.voxy$createRenderer();
         }
     }
 

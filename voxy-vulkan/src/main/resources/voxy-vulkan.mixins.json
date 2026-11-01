@@ -7,17 +7,25 @@
   "client": [
     "DefaultChunkRendererMixin",
     "FrontendGpuDeviceAccessor",
+    "IrisVoxyRenderPipelineDataMixin",
+    "IrisVoxyRenderPipelineMixin",
     "LevelRendererMixin",
     "LightMapHelperMixin",
     "MinecraftMixin",
+    "RenderPipelineFactoryMixin",
     "RenderSystemMixin",
     "SodiumWorldRendererMixin",
     "SoftwareModelTextureBakeryMixin",
     "SpriteContentsAccessor",
     "TextureAtlasAccessor",
+    "VulkanCommandEncoderMixin",
     "VulkanFeatureSetsMixin",
     "VulkanGpuTextureAccessor",
-    "VulkanGpuTextureMixin"
+    "VulkanGpuTextureMixin",
+    "vitrail.EngineDefinesMixin",
+    "vitrail.PackChainMixin",
+    "vitrail.PackPassMixin",
+    "vitrail.UniformCatalogMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -43,6 +43,9 @@ public class VoxyVulkanMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        if (mixinClassName.contains(".mixin.vitrail.")) {
+            return FabricLoader.getInstance().isModLoaded("voxy") && FabricLoader.getInstance().isModLoaded("vitrail");
+        }
         return FabricLoader.getInstance().isModLoaded("voxy");
     }
 
@@ -67,6 +70,10 @@ public class VoxyVulkanMixinPlugin implements IMixinConfigPlugin {
         }
         if (targetClassName.equals("net.caffeinemc.mods.sodium.client.render.chunk.DefaultChunkRenderer")) {
             skipOnVulkan(targetClass, "voxy$injectRender");
+            return;
+        }
+        if (targetClassName.equals("me.cortex.voxy.client.iris.IrisVoxyRenderPipelineData")) {
+            dropIrisMethods(targetClass);
             return;
         }
         if (!targetClassName.equals("net.minecraft.client.Minecraft")) {
@@ -94,6 +101,40 @@ public class VoxyVulkanMixinPlugin implements IMixinConfigPlugin {
         } else {
             VoxyVulkan.LOGGER.warn("Voxy Vulkan: Voxy's Vulkan device check not found; the game may start on OpenGL");
         }
+    }
+
+    /**
+     * Voxy's shader pack pipeline data is built from Iris objects in a few static methods; without Iris the
+     * class fails verification because of them. They are removed (voxy-vulkan fills the data from Vitrail),
+     * the data itself and its accessors stay as they are.
+     */
+    private static void dropIrisMethods(ClassNode target) {
+        List<String> dropped = new java.util.ArrayList<>();
+        target.methods.removeIf(method -> {
+            boolean iris = method.desc.contains("net/irisshaders");
+            for (AbstractInsnNode insn : method.instructions.toArray()) {
+                if (iris) {
+                    break;
+                }
+                if (insn instanceof MethodInsnNode call) {
+                    iris = call.owner.startsWith("net/irisshaders") || call.desc.contains("net/irisshaders")
+                        || call.owner.startsWith("me/cortex/voxy/client/iris/IrisVoxyRenderPipelineData$");
+                } else if (insn instanceof TypeInsnNode type) {
+                    iris = type.desc.contains("net/irisshaders") || type.desc.startsWith("me/cortex/voxy/client/iris/IrisVoxyRenderPipelineData$")
+                        && !type.desc.endsWith("$StructLayout") && !type.desc.endsWith("$ImageSet") && !type.desc.endsWith("$SSBOSet");
+                } else if (insn instanceof org.objectweb.asm.tree.FieldInsnNode field) {
+                    iris = field.owner.startsWith("net/irisshaders") || field.desc.contains("net/irisshaders");
+                } else if (insn instanceof org.objectweb.asm.tree.InvokeDynamicInsnNode indy) {
+                    iris = indy.desc.contains("net/irisshaders") || java.util.Arrays.toString(indy.bsmArgs).contains("irisshaders");
+                }
+            }
+            if (iris && !method.name.equals("<init>")) {
+                dropped.add(method.name);
+                return true;
+            }
+            return false;
+        });
+        VoxyVulkan.LOGGER.info("Voxy Vulkan: Iris-only methods of Voxy's pack pipeline data left out: {}", dropped);
     }
 
     /** Voxy's void handler {@code name} returns right away while the game renders through Vulkan. */
