@@ -295,7 +295,9 @@ sharpening, no jitter on join, entity motion vectors, FG matrices in double, mem
 v1.1.3 (2026-11-01, Latest): DLSS model M by default (K's grid over shader pack noise), `siris-1.1.3+mc26.3.jar` +
 unchanged `viris-0.3.0+mc26.3.jar`; Modrinth siris-dlss version 1.1.3 (id 4vXqzP0M). Lunar `DLSS Optimized` has it
 (backup `mods-backup-2026-11-01-113/`, with voxy-server-side added by the user): config moved to `preset=m`,
-`configVersion=2`, singleplayer with Complementary + LODs 177/88 fps, no grid. surv and dlss-test still iris-dlss 1.1.1.
+`configVersion=2`, singleplayer with Complementary + LODs 177/88 fps, no grid. surv and dlss-test got siris-1.1.3 too
+(iris-dlss-1.1.1 removed, backups `mods-backup-2026-11-01-113/`); surv has no VIRIS (voxy-vulkan-0.1.0 `.disabled`).
+VIRIS gallery: 4 images (midday, no grid visible), siris-dlss gallery: 6 images.
 viris-v0.3.0 (2026-11-01, title "VIRIS 0.3.0 + SIRIS 1.1.2 (Minecraft 26.3)"): `viris-0.3.0+mc26.3.jar` (rename,
 shader pack LODs) + unchanged `siris-1.1.2+mc26.3.jar`.
 Modrinth (token `MODRINTH_TOKEN` in `.env`, API v2 with header `Authorization: <token>`): `siris-dlss` (id NLzgnD4s,
