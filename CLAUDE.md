@@ -308,7 +308,8 @@ waiting for review. New version: POST /v2/version multipart (`data` JSON + `file
 Gallery: 6 images.
 
 Newest first:
-- v1.2.2 (2026-11-11, Latest): Windows on Arm (PR #3, MichaelMKenny): present ids only with VSync (driver crash on Arm), bridge builds on Arm64; jar still x64 only. Modrinth saT2SUXs.
+- v1.3.0 (2026-11-12, Latest): Frame Generation up to 6x (driver-reported), latency stat from frame start. Modrinth nItwjslA.
+- v1.2.2 (2026-11-11): Windows on Arm (PR #3, MichaelMKenny): present ids only with VSync (driver crash on Arm), bridge builds on Arm64; jar still x64 only. Modrinth saT2SUXs.
 - v1.2.1 (2026-11-11): DLSS-G motion vectors in pixels (PR #2, MichaelMKenny): no FG smear on turns, x3/x4 move. Modrinth vNjHsXyG.
 - v1.2.0 (2026-11-09): DLSS-G UI Recomposition (HUD without ghosts in generated frames), NVIDIA license metadata. Modrinth SQLIZhSf.
 - v1.1.6 (2026-11-03): mobs keep the pack shader, presenter hardening, Limit to monitor. Modrinth pAtgPLdr.
