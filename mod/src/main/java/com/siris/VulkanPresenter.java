@@ -200,6 +200,17 @@ public final class VulkanPresenter {
         return stats[0];
     }
 
+    /** Frame start (input) until the real frame went out, in ms; and motion judder of shown frames, in ms. */
+    public static float latencyMs() {
+        refreshStats();
+        return stats[7];
+    }
+
+    public static float judderMs() {
+        refreshStats();
+        return stats[9];
+    }
+
     /** 1% low of shown frames over the last five seconds (fps), generated ones included. */
     public static float shownLowFps() {
         refreshStats();

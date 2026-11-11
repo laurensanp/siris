@@ -275,7 +275,7 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. W
 - Driver 617.42, 4060 Ti (2026-11-04): `VK_NV_present_metering` listed and feature `presentMetering=1`, `VK_NV_low_latency2` listed (its feature not queried). SIRIS uses neither. Metering tried and removed the same day (`VkSetPresentConfigNV` in the present chain on the first frame of each batch, feedback 1, present OK; dev, 165 Hz, FG x2, Quality, 1 deg/frame spin, 3-6 runs each): no VSync judder 2.17 ms off, 2.11 with the CPU spacing kept, 2.31 sending the batch at once (rendered 109 -> 121, spacing worse); VSync 0.98 off, 0.98 at once. No gain here; RTX 50 and real x3/x4 not tested, there it may differ. VSync halves the judder (0.98 vs 2.17 ms) at 22 vs 15.6 ms latency, rendered capped at 82.
 - Settings UI: Sodium pages "Settings"/"Advanced" (`SodiumOptions`) and Mod Menu screen (`DlssSettingsScreen`);
   overlay in the HUD (`HudMixin`). Screenshot them with `-PdlssScreen=mod|sodium|sodium2` (`DevScreens`).
-- Multi frame generation: 2x/3x/4x (`frameGenMultiplier`), limited to the GPU's `DLSSG.MultiFrameCountMax`
+- Multi frame generation: 2x-6x (`frameGenMultiplier`), limited to the GPU's `DLSSG.MultiFrameCountMax`
   (4060 Ti: 2x only). One DLSS-G evaluate per generated frame. Frames are paced evenly over the game's frame
   interval with and without VSync. 3x/4x verified in a friend's log (RTX 50, Lunar), and on screen 2026-11-11 (RTX Spark N1X).
 - DLSS-G motion vectors (2026-11-11, contributor's RTX Spark N1X: Windows on Arm, 3270x2180 @ 120 Hz, G-SYNC): `mvecScale` is
@@ -283,6 +283,14 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. W
   hid that, but FG Lite (driver DLSS-FG Preset C) only cross-faded the real frames: x3 generated frames at 0.01 / 0.95 of the way
   (120 shown moved like 40), now 0.35 / 0.70. Check with `-PdlssDebug=spin` captures (`fg_NNN_a2_generated.png` etc. for x3/x4)
   and the image shift between them. It also fixed the old "FG smear at tree edges while turning" (checked on the 4060 Ti, see there).
+- NVIDIA's RTX Remix for Minecraft (2026-11-12, github.com/NVIDIAGameWorks/rtx-remix-minecraft, Apache-2.0, MC 1.21.1): a path
+  tracer that replaces the renderer (scene capture -> Remix D3D9 runtime = dxvk-remix); no shader packs, nothing to port. Its DLSS-G
+  code (dxvk-remix `rtx_dlfg.cpp`) uses mvec scale (1,1) like ours, up to 6x, Reflex out-of-band markers, GPU-timestamp pacing.
+  Taken from it: 5x/6x (`MultiFrameCountMax` up to 5; untested, 4060 Ti has 2x only). Reflex-style frame start (sleep until the GPU
+  is about to finish the previous frame) tried and dropped: no gain in dev (FG 12.8 vs 12.9 ms, SR 7.5 vs 7.8 ms, fps same),
+  because RenderPearl already waits for the GPU between frames, before input (frame start ~5 ms after the previous present);
+  latency is already CPU + GPU (+ FG hold). Don't retry unless a setup shows frames queuing. The `latency` stat now runs from
+  frame start (input) to the real frame's present (was from `siris_present`, ~2-3 ms less); benchmark lines log latency/judder.
 - Hardware: FG needs RTX 40/50; on the RTX 3070 dev machine FG fails with
   `NVSDK_NGX_Result_FAIL_UnableToInitializeFeature` (expected). `dlss-bridge/out/dlss_probe.exe` reports SR/FG.
 

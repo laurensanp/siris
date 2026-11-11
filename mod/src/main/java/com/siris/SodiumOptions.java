@@ -219,6 +219,8 @@ public class SodiumOptions implements ConfigEntryPoint {
             case X2 -> "2x: one generated frame per rendered one (RTX 40/50).";
             case X3 -> "3x: two generated frames per rendered one (DLSS 4 multi frame generation, RTX 50).";
             case X4 -> "4x: three generated frames per rendered one (DLSS 4 multi frame generation, RTX 50).";
+            case X5 -> "5x: four generated frames per rendered one (multi frame generation, RTX 50, newer drivers).";
+            case X6 -> "6x: five generated frames per rendered one (multi frame generation, RTX 50, newer drivers).";
         };
         int max = DlssUpscaler.frameGenerationMax();
         return text(text + (max < 0 ? " Which modes this GPU supports shows once DLSS ran in a world."

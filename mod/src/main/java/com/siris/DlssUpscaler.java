@@ -599,7 +599,11 @@ public final class DlssUpscaler {
             frameGenerationMax = DlssNative.frameGenerationMax();
             if (DlssConfig.frameGenMode.factor > Math.max(2, frameGenerationMax)) {
                 // A mode this GPU does not offer (config from an RTX 50 machine): show and use the highest it has.
-                DlssConfig.frameGenMode = frameGenerationMax >= 3 ? DlssConfig.FrameGenMode.X3 : DlssConfig.FrameGenMode.X2;
+                DlssConfig.FrameGenMode highest = DlssConfig.FrameGenMode.X2;
+                for (DlssConfig.FrameGenMode mode : DlssConfig.FrameGenMode.values()) {
+                    highest = mode.factor <= frameGenerationMax ? mode : highest;
+                }
+                DlssConfig.frameGenMode = highest;
             }
             motionPipeline = compile(MOTION_PIPELINE);
             sharpenPipeline = compile(SHARPEN_PIPELINE);

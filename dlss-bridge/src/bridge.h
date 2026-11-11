@@ -114,10 +114,10 @@ SIRIS_API void siris_presenter_destroy();
 SIRIS_API void siris_presenter_set_vsync(int32_t vsync);
 
 // Highest frame generation multiplier the device supports after siris_init: 0 = no frame generation,
-// 2 = one generated frame per rendered one, 3 or 4 = DLSS 4 multi frame generation (RTX 50).
+// 2 = one generated frame per rendered one, 3 to 6 = multi frame generation (RTX 50).
 SIRIS_API int32_t siris_frame_generation_max();
 
-// Generated frames per rendered frame from the next present on (1 = 2x ... 3 = 4x), clamped to what the
+// Generated frames per rendered frame from the next present on (1 = 2x ... 5 = 6x), clamped to what the
 // device supports.
 SIRIS_API void siris_presenter_set_generated(int32_t count);
 SIRIS_API void siris_presenter_set_monitor_limit(int32_t limit);
@@ -145,7 +145,7 @@ SIRIS_API void siris_debug_capture(int32_t frames, const wchar_t* dir);
 // stats[0] = frames shown per second (generated ones included), [1] = the frame generation multiplier
 // (2..4) if it ran in the last second, else 0, [2] = 1 if the presenter thread hit an error (see last_message), [3] = frames the
 // game renders per second, [4] = mean time between shown frames (ms), [5] = its standard deviation
-// (ms), [6] = the longest gap (ms), [7] = latency from siris_present to the real frame's present (ms),
+// (ms), [6] = the longest gap (ms), [7] = latency from the frame's start (siris_presenter_frame_start) to the real frame's present (ms),
 // [8] = 1% low of shown frames over the last 5 seconds (fps).
 enum { SIRIS_STATS_COUNT = 11 };
 SIRIS_API void siris_presenter_stats(float stats[SIRIS_STATS_COUNT]);

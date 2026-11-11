@@ -39,6 +39,8 @@ public final class DlssBenchmark {
     private static long lastFrame;
     private static long worstFrame;
     private static float shownSum;
+    private static float latencySum;
+    private static float judderSum;
     private static int shownSamples;
 
     private DlssBenchmark() {
@@ -75,16 +77,21 @@ public final class DlssBenchmark {
             lastFrame = now;
             if (VulkanPresenter.isRunning() && frames % 30 == 0) {
                 shownSum += VulkanPresenter.shownFps();
+                latencySum += VulkanPresenter.latencyMs();
+                judderSum += VulkanPresenter.judderMs();
                 shownSamples++;
             }
         }
         if (elapsed >= SETTLE_NANOS + MEASURE_NANOS) {
             Mode m = MODES[mode];
             double avgMs = frames > 0 ? frameNanos / 1e6 / frames : 0.0;
-            Siris.LOGGER.info("SIRIS benchmark: {} -> {} fps rendered (avg {} ms, worst {} ms), {} fps shown | {}",
+            Siris.LOGGER.info("SIRIS benchmark: {} -> {} fps rendered (avg {} ms, worst {} ms), {} fps shown, latency {} ms, "
+                + "judder {} ms | {}",
                 m.name, String.format("%.1f", avgMs > 0 ? 1000.0 / avgMs : 0.0), String.format("%.2f", avgMs),
                 String.format("%.1f", worstFrame / 1e6),
-                shownSamples > 0 ? String.format("%.0f", shownSum / shownSamples) : "-", DlssUpscaler.statusLine());
+                shownSamples > 0 ? String.format("%.0f", shownSum / shownSamples) : "-",
+                shownSamples > 0 ? String.format("%.1f", latencySum / shownSamples) : "-",
+                shownSamples > 0 ? String.format("%.2f", judderSum / shownSamples) : "-", DlssUpscaler.statusLine());
             start(mode + 1, now);
         }
     }
@@ -97,6 +104,8 @@ public final class DlssBenchmark {
         lastFrame = 0L;
         worstFrame = 0L;
         shownSum = 0.0F;
+        latencySum = 0.0F;
+        judderSum = 0.0F;
         shownSamples = 0;
         if (index >= MODES.length) {
             Siris.LOGGER.info("SIRIS benchmark: done");

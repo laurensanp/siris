@@ -50,10 +50,10 @@ public final class DlssNative {
 
     public static native void setVsync(boolean vsync);
 
-    /** Highest Frame Generation multiplier of the GPU after init(): 0 = none, 2, or 3/4 (RTX 50). */
+    /** Highest Frame Generation multiplier of the GPU after init(): 0 = none, 2, or 3 to 6 (RTX 50). */
     public static native int frameGenerationMax();
 
-    /** Generated frames per rendered frame (1 = 2x ... 3 = 4x), clamped to what the GPU supports. */
+    /** Generated frames per rendered frame (1 = 2x ... 5 = 6x), clamped to what the GPU supports. */
     public static native void setGeneratedFrames(int count);
 
     public static native void setMonitorLimit(boolean limit);

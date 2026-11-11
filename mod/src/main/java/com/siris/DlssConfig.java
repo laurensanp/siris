@@ -78,7 +78,9 @@ public final class DlssConfig {
     public enum FrameGenMode {
         X2(2, "2x", "2"),
         X3(3, "3x (RTX 50)", "3"),
-        X4(4, "4x (RTX 50)", "4");
+        X4(4, "4x (RTX 50)", "4"),
+        X5(5, "5x (RTX 50)", "5"),
+        X6(6, "6x (RTX 50)", "6");
 
         public final int factor;
         public final String label;
@@ -259,7 +261,7 @@ public final class DlssConfig {
             writer.write("vulkanPresent=" + vulkanPresent + "\n");
             writer.write("frameGeneration=" + frameGeneration + "\n");
             writer.write("fgMonitorLimit=" + fgMonitorLimit + "\n");
-            writer.write("# 2 | 3 | 4 (3 and 4 need an RTX 50 card)\n");
+            writer.write("# 2 | 3 | 4 | 5 | 6 (3 and up need an RTX 50 card, 5 and 6 a driver that offers them)\n");
             writer.write("frameGenMultiplier=" + frameGenMode.key + "\n");
             writer.write("sharpness=" + sharpness + "\n");
             writer.write("renderScale=" + renderScale + "\n");

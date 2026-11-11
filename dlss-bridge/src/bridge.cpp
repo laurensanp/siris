@@ -662,7 +662,8 @@ SIRIS_API int32_t siris_frame_generation_max() {
             &generated)) || generated < 1) {
         generated = 1;
     }
-    g_fgMax = generated >= 3 ? 4 : static_cast<int32_t>(generated) + 1;
+    // Up to 6x where the driver offers it (5 generated frames).
+    g_fgMax = generated >= 5 ? 6 : static_cast<int32_t>(generated) + 1;
     return g_fgMax;
 }
 
@@ -794,7 +795,7 @@ SIRIS_API int32_t siris_evaluate(uint64_t commandBuffer, const SirisImage* color
 namespace {
 
 constexpr int kSlotCount = 3;
-constexpr int kMaxGenerated = 3;  // DLSS 4 multi frame generation: up to 4x
+constexpr int kMaxGenerated = 5;  // multi frame generation: up to 6x
 constexpr int kBlitCount = 4;
 constexpr VkImageSubresourceRange kColorRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
 
@@ -806,7 +807,7 @@ struct LocalImage {
 
 struct PresentSlot {
     LocalImage real;
-    LocalImage interp[kMaxGenerated];  // [1] and [2] are created when multi frame generation first needs them
+    LocalImage interp[kMaxGenerated];  // [1] and up are created when multi frame generation first needs them
     bool busy = false;  // queued for / shown by the presenter thread (guarded by Presenter::mutex)
 };
 
@@ -1454,7 +1455,8 @@ void presenterLoop() {
             }
         }
         if (shown) {
-            recordLatency(job.queued);
+            // From the frame's start (input read) when known, not from the hand-over: what the player feels.
+            recordLatency(job.started > 0.0 ? job.started : job.queued);
         }
         waitBlits();
         {
