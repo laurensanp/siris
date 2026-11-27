@@ -3,6 +3,7 @@ package com.siris.mixin;
 import com.siris.DlssUpscaler;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,6 +15,11 @@ public class CameraMixin {
 
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void siris$jitter(CameraRenderState cameraState, DeltaTracker deltaTracker, CallbackInfo ci) {
-        DlssUpscaler.applyJitter(cameraState);
+        // Only the frame's own camera: shader loaders (Iris, Vitrail) and other mods extract the main camera
+        // again into a state of their own. Jittering those too stepped the Halton index twice per frame and
+        // replaced the jitter and matrices DLSS is told with ones the frame wasn't rendered with.
+        if (cameraState == Minecraft.getInstance().gameRenderer.gameRenderState().levelRenderState.cameraRenderState) {
+            DlssUpscaler.applyJitter(cameraState);
+        }
     }
 }
