@@ -231,7 +231,17 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. W
 - Jitter sign (2026-10-31): NGX got +jitterX; the picture shook ±0.25 px horizontally at a still camera (user's Lunar
   F2 burst, then dev Custom 80 %: 8 testShots, floor rms 0.7-2.3 with +x vs 0.42-0.50 and no shift with -x; y sign made
   no difference). `DlssUpscaler.reportedJitterX()` now reports -jitterX (SR and FG params); config jitterSign* stay a
-  diagnostic on top (1.0 = correct). User confirmed in Lunar.
+  diagnostic on top (1.0 = correct). User confirmed in Lunar. **Recheck since PR #8:** probably a compensation
+  for the double jitter step below (NGX was told phase n+1, consecutive base-2 Halton x values are nearly opposite, so
+  -x(n+1) ~ +x(n); base 3 isn't, hence "y made no difference"). NVIDIA's convention (projection +2jx/w -> report +jx)
+  says +jitterX. Test on Windows: still camera, Quality, 8 testShots, default vs `jitterSignX=-1` (= +jitterX); flip the
+  code if -1 is steadier. Asked the PR #8 author to check too.
+- Jitter only on the frame's own camera (PR #8, SpinGiantCRM, merged 2026-11-27, `b6db08f`): Vitrail (`ShadowGeometry
+  .gather`) and Iris extract the main camera again for shadows; each call stepped the Halton index and replaced the
+  jitter/matrices DLSS got, so only every other phase was rendered (Quality: 9 of 18, all on one side in x) and evaluate
+  got another phase than the frame used. Author's 4K Quality, Photon: comb lines in the sky every 12 output px gone
+  (4.57 -> 0.15). `CameraMixin` now only jitters `gameRenderState().levelRenderState.cameraRenderState`; vanilla's only
+  caller is `GameRenderer.extractCamera` with that state. Compiled against 26.3; not run on Windows or in Lunar yet.
 - Grid of fine dashes over fog / light shafts with shader packs (2026-11-01, user's server shot): DLSS model K turns the
   packs' animated noise (Complementary VL mainly, also fog) into a 2-render-px lattice. Same view (dev, sunrise, y 150,
   Complementary, Quality + FG): K grid; E grainy, no grid; M clean (~1 ms more, 121 vs 135 rendered); no DLSS clean;
@@ -317,6 +327,7 @@ waiting for review. New version: POST /v2/version multipart (`data` JSON + `file
 Gallery: 6 images.
 
 Newest first:
+- Unreleased on main: PR #8 (jitter only the frame's own camera); check the x jitter sign before releasing.
 - v1.3.3 (2026-11-26, Latest): single-mip attachment views for render passes (PR #7, SpinGiantCRM; VUID-12486 with mipmapped pack targets; @WrapOperation added by us). Modrinth hX58uGFI.
 - v1.3.2 (2026-11-26): `VK_KHR_format_feature_flags2` with optical flow (PR #6, SpinGiantCRM; validation VUID-01387 on Vulkan 1.2). Modrinth rphMDZvq.
 - v1.3.1 (2026-11-25): Ixeris works (issue #5): presenter child window on its own thread when the game window is on another. Modrinth 3X4dI7H8.
