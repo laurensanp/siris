@@ -12,6 +12,7 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. W
 | `dlss-bridge/` | native C++ bridge (`siris.dll`): NGX, DLSS SR, presenter + DLSS-G, `dlss_probe.exe` |
 | `mod/` | the Fabric mod (Java), packs the bridge + NVIDIA DLLs into its jar |
 | `testpacks/` | own small GLSL test packs (from the old Iris port) |
+| `tools/` | `modrinth-upload.ps1` (Modrinth release upload), `release-notes-<version>.md` |
 | `libs/` (ignored) | compile-only jar: `sodium-fabric-0.9.2+mc26.3.jar` (Modrinth) |
 | `mod/run/` (ignored) | test game dir: Sodium, Fabric API, Vitrail in `mods/`, packs, `saves/vulkan-test`, `vitrail/pack.txt` |
 
@@ -324,10 +325,24 @@ release create ...`). Vitrail and Voxy are never attached (link to Modrinth). Ne
 Modrinth (token `MODRINTH_TOKEN` in `.env`, API v2, header `Authorization: <token>`): `siris-dlss` (id NLzgnD4s), still
 waiting for review. New version: POST /v2/version multipart (`data` JSON + `file`; version_type release, game_versions
 26.3, loaders fabric, featured; deps: Sodium required, Vitrail + Mod Menu optional), then PATCH /v3/version `client_only`.
-Gallery: 6 images.
+Gallery: 6 images. `tools\modrinth-upload.ps1 -Version <x.y.z>` does both (token from `.env`, changelog from
+`tools/release-notes-<x.y.z>.md` from `## SIRIS` on, ids: Sodium AANobbMI, Vitrail oSIKhgz3, Mod Menu mOgUt4GM); if the
+PATCH answers 400 the v3 field name is off: set Client-only on the version page. Versions aren't visible on the public
+API while the project is in review.
 
 Newest first:
-- Unreleased on main: PR #8 (jitter only the frame's own camera); check the x jitter sign before releasing.
+- **v1.3.4: pending, do this next on the PC (since 2026-11-27).** Main has PR #8 (jitter only the frame's own camera) and
+  `version = "1.3.4+mc26.3"` (PR #10); bridge unchanged since 1.3.3. Not on GitHub or Modrinth yet. The user chose to test
+  first. Steps: (1) `git pull`, rebuild the bridge if `dlss-bridge/out` is older than 1.3.3. (2) x jitter sign test (see
+  "Jitter sign" under DLSS notes): dev, Solas, Quality, `JAVA_TOOL_OPTIONS=-Dsiris.testShots=8`, `gradlew runClient
+  --no-daemon -PtestWorld=vulkan-test -PdlssDebug=still -PtestTicks=600`, once with the default and once with
+  `jitterSignX=-1.0` in `run/config/siris.properties`; compare the 8 shots for horizontal shift/shimmer (floor rms as on
+  2026-10-31). If -1 is steadier: change `reportedJitterX()` to `+jitterX` (fix its comment and the Jitter sign note),
+  add a line to the notes, commit. Put `jitterSignX=1.0` back. (3) Quick look in game with Solas and FG (still camera,
+  turning), Lunar if the user wants. (4) `gradlew build`, then `gh release create v1.3.4
+  mod/build/libs/siris-1.3.4+mc26.3.jar ... --notes-file tools/release-notes-1.3.4.md` (ask the user to approve it).
+  (5) `tools\modrinth-upload.ps1 -Version 1.3.4`. (6) Replace this entry with the release line and the Modrinth id, update
+  "Current Lunar install" if installed there.
 - v1.3.3 (2026-11-26, Latest): single-mip attachment views for render passes (PR #7, SpinGiantCRM; VUID-12486 with mipmapped pack targets; @WrapOperation added by us). Modrinth hX58uGFI.
 - v1.3.2 (2026-11-26): `VK_KHR_format_feature_flags2` with optical flow (PR #6, SpinGiantCRM; validation VUID-01387 on Vulkan 1.2). Modrinth rphMDZvq.
 - v1.3.1 (2026-11-25): Ixeris works (issue #5): presenter child window on its own thread when the game window is on another. Modrinth 3X4dI7H8.
