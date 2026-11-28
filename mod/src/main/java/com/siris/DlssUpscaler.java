@@ -786,13 +786,13 @@ public final class DlssUpscaler {
     }
 
     /**
-     * The jitter as NGX takes it: the sample's offset from the pixel centre. The projection is shifted by
-     * +jitter in clip space, so the sample sits at -jitter in x; y is already flipped by the game's Vulkan
-     * projection. Measured 2026-10-31 (still camera, Custom 80 %): x reported as +jitter left the picture
-     * shaking by ±0.25 px horizontally, -jitter keeps it still. The config signs stay a diagnostic on top.
+     * The jitter as NGX takes it, by NVIDIA's convention (projection shifted by +2 * jitter / size -> report
+     * +jitter). The -jitterX used from 0.7.7 to 1.3.3 only made up for the double Halton step fixed in PR #8.
+     * Measured 2026-11-28 (still camera, Solas, Quality, 8 shots, 2 runs each): +x frame-to-frame rms 1.41-1.57,
+     * x shift ~0.001 px; -x 1.61-1.87, ~0.01 px. The config signs stay a diagnostic on top.
      */
     private static float reportedJitterX() {
-        return -jitterX * DlssConfig.jitterSignX;
+        return jitterX * DlssConfig.jitterSignX;
     }
 
     private static float reportedJitterY() {

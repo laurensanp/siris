@@ -232,11 +232,10 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. W
 - Jitter sign (2026-10-31): NGX got +jitterX; the picture shook ±0.25 px horizontally at a still camera (user's Lunar
   F2 burst, then dev Custom 80 %: 8 testShots, floor rms 0.7-2.3 with +x vs 0.42-0.50 and no shift with -x; y sign made
   no difference). `DlssUpscaler.reportedJitterX()` now reports -jitterX (SR and FG params); config jitterSign* stay a
-  diagnostic on top (1.0 = correct). User confirmed in Lunar. **Recheck since PR #8:** probably a compensation
-  for the double jitter step below (NGX was told phase n+1, consecutive base-2 Halton x values are nearly opposite, so
-  -x(n+1) ~ +x(n); base 3 isn't, hence "y made no difference"). NVIDIA's convention (projection +2jx/w -> report +jx)
-  says +jitterX. Test on Windows: still camera, Quality, 8 testShots, default vs `jitterSignX=-1` (= +jitterX); flip the
-  code if -1 is steadier. Asked the PR #8 author to check too.
+  diagnostic on top (1.0 = correct). User confirmed in Lunar. **Flipped back to +jitterX in 1.3.4 (2026-11-28):** the -x
+  only made up for the double Halton step fixed in PR #8 (NGX was told phase n+1, consecutive base-2 Halton x values are
+  nearly opposite, so -x(n+1) ~ +x(n); base 3 isn't, hence "y made no difference"). Dev, Solas, Quality, still camera,
+  8 testShots, 2 runs each: +x frame-to-frame rms 1.41-1.57, x shift ~0.001 px; -x 1.61-1.87, ~0.01 px.
 - Jitter only on the frame's own camera (PR #8, SpinGiantCRM, merged 2026-11-27, `b6db08f`): Vitrail (`ShadowGeometry
   .gather`) and Iris extract the main camera again for shadows; each call stepped the Halton index and replaced the
   jitter/matrices DLSS got, so only every other phase was rendered (Quality: 9 of 18, all on one side in x) and evaluate
@@ -333,7 +332,8 @@ API while the project is in review.
 Newest first:
 - **v1.3.4: pending, do this next on the PC (since 2026-11-27).** Main has PR #8 (jitter only the frame's own camera) and
   `version = "1.3.4+mc26.3"` (PR #10); bridge unchanged since 1.3.3. Not on GitHub or Modrinth yet. The user chose to test
-  first. Steps: (1) `git pull`, rebuild the bridge if `dlss-bridge/out` is older than 1.3.3. (2) x jitter sign test (see
+  first. 2026-11-28: steps (1)-(3) done in dev (bridge current, x sign flipped to +jitterX, FG spin captures look as
+  before; generated frames show colour banding in the Solas sky with either sign, so not from this change). Steps: (1) `git pull`, rebuild the bridge if `dlss-bridge/out` is older than 1.3.3. (2) x jitter sign test (see
   "Jitter sign" under DLSS notes): dev, Solas, Quality, `JAVA_TOOL_OPTIONS=-Dsiris.testShots=8`, `gradlew runClient
   --no-daemon -PtestWorld=vulkan-test -PdlssDebug=still -PtestTicks=600`, once with the default and once with
   `jitterSignX=-1.0` in `run/config/siris.properties`; compare the 8 shots for horizontal shift/shimmer (floor rms as on
