@@ -241,10 +241,11 @@ commands after joining), `-PtestPitch=40`, `-PtestTicks=900`, `-PwindowSize=1920
 Look at the screenshot. If Gradle says "Could not connect to the Gradle daemon", run `gradlew --stop` and
 try again.
 
-Test packs in [`testpacks/`](testpacks) (own, small GLSL, written for the old Iris port, not yet checked
-with Vitrail): `VulkanTest` (composite swaps red/blue, final
-draws an 8 px red border, gbuffers write colortex0/1), `VulkanTestPost` (composite/final only),
-`VulkanTestAo`, `VulkanTestCenter`, `VulkanTestMip` (shadowtex0 mip 0 left, mip 4 right).
+Test packs in [`testpacks/`](testpacks) (own, small GLSL, written for the old Iris port): `VulkanTest`
+(composite swaps red/blue, final draws an 8 px red border, gbuffers write colortex0/1) and `VulkanTestMip`
+(shadowtex0 mip 0 left, mip 4 right) work with Vitrail. `VulkanTestPost`, `VulkanTestCenter` (composite/final only)
+show only the sky there, and Vitrail leaves `VulkanTestAo`'s terrain program unused (checked 2026-11-28, same
+with DLSS off): Vitrail draws the world with the game's own shader for packs without a terrain program.
 
 More background for contributors: [`CLAUDE.md`](CLAUDE.md) (status, design, test notes).
 
@@ -315,6 +316,6 @@ This mod uses the NVIDIA DLSS SDK. It is an independent project, not sponsored o
 the NVIDIA logo are trademarks and/or registered trademarks of NVIDIA Corporation in the U.S. and other countries.
 DLSS runtime files: © NVIDIA Corporation. All rights reserved.
 
-The DLSS runtime includes third-party code. Its copyright and license notices are in sections 9.5 and 9.6 of NVIDIA's
-[DLSS Programming Guide](https://github.com/NVIDIA/DLSS/blob/main/doc/DLSS_Programming_Guide_Release.pdf): CURL,
-8x13 bitmap font, d3dx12.h, xml, npy, stb, DirectX-Graphics-Samples, Vulkan-Headers.
+The DLSS runtime includes third-party code (CURL, 8x13 bitmap font, d3dx12.h, xml, npy, stb, DirectX-Graphics-Samples,
+Vulkan-Headers). Its copyright and license notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+(`natives/THIRD_PARTY_NOTICES.md` in the jar).

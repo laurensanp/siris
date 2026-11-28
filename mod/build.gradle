@@ -38,6 +38,7 @@ java {
 tasks.register("copyNatives", Copy) {
 	from("../dlss-bridge/out") { include "siris.dll", "nvngx_dlss.dll", "nvngx_dlssg.dll" }
 	from("../dlss-bridge/third_party/ngx") { include "LICENSE.txt"; rename { "NVIDIA_DLSS_LICENSE.txt" } }
+	from("..") { include "THIRD_PARTY_NOTICES.md" }
 	into "src/main/resources/natives"
 }
 processResources.dependsOn copyNatives
