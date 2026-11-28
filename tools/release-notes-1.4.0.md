@@ -6,4 +6,4 @@ Experimental, Windows + NVIDIA RTX only. Install, requirements and Lunar notes: 
 - **Mob limbs move on their own.** Motion vectors now follow the arms, legs and heads of mobs and players, not just their bodies, so DLSS and Frame Generation can track swinging limbs. The difference is small at walking speed and mostly shows on close or fast mobs, and at Frame Generation 3x and above. No change in frame rate.
 - **License notices.** The jar now carries the full third-party notices of NVIDIA's DLSS runtime (`THIRD_PARTY_NOTICES.md`), and an old unused file from before the rename is gone.
 
-Works with [VIRIS](https://github.com/laurensanp/viris) if you want Voxy LODs on Vulkan. It is not required.
+Works with [WEITER](https://github.com/laurensanp/weiter) if you want Voxy LODs on Vulkan. It is not required.
