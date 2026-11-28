@@ -5,7 +5,7 @@ Resolution + Frame Generation inside the game's own Vulkan renderer (RenderPearl
 **Vitrail** (separate mod, modrinth `vitrail-shaders`, github avpbynf/Vitrail-Shaders, LGPL-3.0, not ours,
 never commit or ship it). `README.md` lists everything a player or developer needs and where it comes from.
 
-Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. Works with **VIRIS** (Voxy LODs on Vulkan), its own repo since 2026-11-02: github.com/laurensanp/viris, local clone `../viris`, notes in its CLAUDE.md. Neither mod needs the other (tested alone 2026-11-02); docs only mention each other as "works with". Both repos have the same layout (`mod/`, `libs/`, `.github/assets/`) and README sections in the same order: keep them that way.
+Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. Works with **WEITER** (Voxy LODs on Vulkan; called VIRIS until 0.5.1, renamed 2026-11-28 because it looked too much like SIRIS), its own repo since 2026-11-02: github.com/laurensanp/weiter, local clone `../viris` (folder not renamed), notes in its CLAUDE.md. Mod id `weiter`, it also provides `viris`; older notes below say VIRIS. Neither mod needs the other (tested alone 2026-11-02); docs only mention each other as "works with". Both repos have the same layout (`mod/`, `libs/`, `.github/assets/`) and README sections in the same order: keep them that way.
 
 | Path | What |
 |---|---|
@@ -275,7 +275,7 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. W
   `PackChoice.reloadIfTheWorldMoved` re-reading/compiling the whole pack because the registry stamp changed (only
   needed for block tags `%ns:path` in block.properties). `VitrailJoinReloadMixin` skips it (PackDefines.settle()
   by reflection) when that is the only reason and the pack names no tag (`ShaderPackTweaks.selectedPackUsesBlockTags`);
-  dimension change / DH / LabPBR still reload, and since 1.1.4 every join with `viris` loaded (else the LODs lost
+  dimension change / DH / LabPBR still reload, and since 1.1.4 every join with `weiter`/`viris` loaded (else the LODs lost
   their colour on the second join). Solas has no tags. Remaining join cost: Vitrail pipeline warm-up
   (`skipLevelWhilePackWarms`), chunk loading. Window resize recreates DLSS/FG (150-250 ms, expected).
 - Presenter alone costs nothing (dev, FG off: presenter 133-135 fps vs presenter off 136); FG costs ~3.3 ms per

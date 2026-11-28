@@ -157,7 +157,7 @@ Vitrail's own compatibility table: [docs/compatibility.md](https://github.com/av
 
 ## Works with
 
-[VIRIS](https://github.com/laurensanp/viris) (Voxy LODs on Vulkan): install it next to this mod if you want
+[WEITER](https://github.com/laurensanp/weiter) (Voxy LODs on Vulkan, formerly VIRIS): install it next to this mod if you want
 [Voxy](https://modrinth.com/mod/voxy)'s distant terrain. It is not required, and it runs without this mod too.
 
 ## Performance
@@ -300,7 +300,7 @@ submit signals a timeline semaphore ──────────────�
   the screen centre (also without DLSS).
 * Joining a world: Vitrail reads and compiles the shader pack a second time so block tags resolve; for packs
   without block tags (e.g. Solas) the mod skips that second read, which shortens the join hitch. With
-  [VIRIS](https://github.com/laurensanp/viris) installed it doesn't (its LODs need that read).
+  [WEITER](https://github.com/laurensanp/weiter) installed it doesn't (its LODs need that read).
 * Motion vectors follow the camera and moving entities (position and body turn, nearest 32), not animated
   parts (legs, heads), water waves or particles: those can smear a little.
 * Only Windows + NVIDIA.

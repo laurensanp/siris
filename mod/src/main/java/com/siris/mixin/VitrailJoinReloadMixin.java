@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * registry stamp is the only reason, and the pack names no tag, the pack is marked current instead,
  * from the second join on (the first read is needed for the entity programs, see below).
  * A dimension change, Distant Horizons or a resource pack material change still reload, and so does every
- * join with VIRIS installed: without the reload the pack's Voxy LODs lost their colour on the second join
+ * join with WEITER (formerly VIRIS) installed: without the reload the pack's Voxy LODs lost their colour on the second join
  * (grey outlines until the pack was reloaded). Only applied when Vitrail is installed; reflection because
  * Vitrail is not on the compile classpath.
  */
@@ -43,11 +43,12 @@ public class VitrailJoinReloadMixin {
     @Unique
     private static boolean siris$entityFormatRead;
     @Unique
-    private static final boolean VIRIS = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("viris");
+    private static final boolean WEITER = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("weiter")
+            || net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("viris");
 
     @Inject(method = "reloadIfTheWorldMoved", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private static void siris$skipTaglessReload(Path gameDirectory, CallbackInfoReturnable<Boolean> cir) {
-        if (siris$failed || VIRIS) {
+        if (siris$failed || WEITER) {
             return;
         }
         try {
