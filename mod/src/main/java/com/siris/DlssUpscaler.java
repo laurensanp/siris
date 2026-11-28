@@ -33,6 +33,7 @@ import org.joml.Matrix4d;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 
 /**
  * Runs DLSS on the world image, entirely on the game's Vulkan device: the world renders into a
@@ -57,8 +58,9 @@ public final class DlssUpscaler {
         """;
 
     // Motion vectors: reproject each pixel's position with last frame's camera. Pixels inside a moving
-    // entity's box (EntityMotion) are first moved back with that entity: translation plus its body
-    // turn about the vertical axis. Values are render-resolution pixels pointing from the current to
+    // entity's box (EntityMotion) are first moved back with that entity: with the model cube they lie on
+    // (animated legs, arms, head) when one matches, else translation plus its body turn about the
+    // vertical axis. Values are render-resolution pixels pointing from the current to
     // the previous position. DepthSampler is the world's depth (saved before the hand pass clears it),
     // HandSampler the final depth, where everything but the first-person hand is the clear value.
     // Hand pixels get no motion; DLSS and frame generation get the combined depth.
@@ -77,8 +79,10 @@ public final class DlssUpscaler {
             int DepthInverted;
             int HandInDepth;
             int EntityCount;
-            // Per entity: center (camera-relative) + yaw change, half size, world movement.
+            // Per entity: center (camera-relative) + yaw change, half size + first cube, world movement + cube count.
             vec4 Entities[%d];
+            // Per cube: inverse current matrix rows (3), previous matrix rows (3), local min, local max.
+            vec4 Cubes[%d];
         };
         layout(location = 0) out vec2 outMotion;
         layout(location = 1) out float outDepth;
@@ -110,6 +114,23 @@ public final class DlssUpscaler {
                         vec4 center = Entities[i * 3];
                         vec3 relative = point - center.xyz;
                         if (all(lessThanEqual(abs(relative), Entities[i * 3 + 1].xyz))) {
+                            int first = int(Entities[i * 3 + 1].w);
+                            int last = first + int(Entities[i * 3 + 2].w);
+                            bool onCube = false;
+                            for (int k = first; k < last; k++) {
+                                int b = k * 8;
+                                vec4 p = vec4(point, 1.0);
+                                vec3 local = vec3(dot(Cubes[b], p), dot(Cubes[b + 1], p), dot(Cubes[b + 2], p));
+                                if (all(greaterThanEqual(local, Cubes[b + 6].xyz)) && all(lessThanEqual(local, Cubes[b + 7].xyz))) {
+                                    vec4 l = vec4(local, 1.0);
+                                    point = vec3(dot(Cubes[b + 3], l), dot(Cubes[b + 4], l), dot(Cubes[b + 5], l));
+                                    onCube = true;
+                                    break;
+                                }
+                            }
+                            if (onCube) {
+                                break;
+                            }
                             float s = sin(center.w);
                             float c = cos(center.w);
                             vec3 turned = vec3(c * relative.x + s * relative.z, relative.y, c * relative.z - s * relative.x);
@@ -131,7 +152,7 @@ public final class DlssUpscaler {
             }
             outMotion = clamp(motion, -RenderSize, RenderSize);
         }
-        """.formatted(EntityMotion.MAX * EntityMotion.VEC4S);
+        """.formatted(EntityMotion.MAX * EntityMotion.VEC4S, EntityMotion.MAX_CUBES * EntityMotion.CUBE_VEC4S);
 
     // World-anchored HUD (waypoint icons) drawn into the picture frame generation moves: inside their
     // rectangles (render pixels, memory rows) the motion vectors are replaced by the screen motion of
@@ -214,13 +235,19 @@ public final class DlssUpscaler {
         }
         """;
 
-    // After the GUI: its opacity as an image for DLSS-G's User Interface Recomposition (reads red).
+    // After the GUI: DLSS-G's pUI, the GUI's colour premultiplied by its opacity plus the opacity in alpha, so that
+    // frame = ui.rgb + (1 - ui.a) * hudless; 0 where there is no GUI. Opacity in red with alpha 1 (1.2.0-1.3.4) made
+    // DLSS-G treat every pixel as GUI: generated frames banded smooth skies while turning (2026-11-28).
     private static final String UI_ALPHA_SHADER = """
         #version 330
         uniform sampler2D ColorSampler;
+        uniform sampler2D HudlessSampler;
         layout(location = 0) out vec4 fragColor;
         void main() {
-            fragColor = vec4(vec3(texelFetch(ColorSampler, ivec2(gl_FragCoord.xy), 0).a), 1.0);
+            ivec2 p = ivec2(gl_FragCoord.xy);
+            vec4 frame = texelFetch(ColorSampler, p, 0);
+            vec3 hudless = texelFetch(HudlessSampler, p, 0).rgb;
+            fragColor = frame.a > 0.0 ? vec4(clamp(frame.rgb - (1.0 - frame.a) * hudless, 0.0, 1.0), frame.a) : vec4(0.0);
         }
         """;
 
@@ -260,6 +287,8 @@ public final class DlssUpscaler {
             .withUniform("SharpenInfo", UniformType.UNIFORM_BUFFER).build(),
         ColorTargetState.DEFAULT);
     private static final int MOTION_INFO_SIZE = motionInfoSize();
+    // ~33 KB: too big for the MemoryStack, reused every frame (never freed, lives as long as the game).
+    private static final ByteBuffer MOTION_INFO = MemoryUtil.memAlloc(MOTION_INFO_SIZE);
     private static final RenderPipeline ICON_MOTION_PIPELINE = fullscreenPipeline("icon_motion",
         BindGroupLayout.builder().withUniform("IconInfo", UniformType.UNIFORM_BUFFER).build(),
         new ColorTargetState(Optional.empty(), GpuFormat.RG16_FLOAT, ColorTargetState.WRITE_ALL));
@@ -268,7 +297,8 @@ public final class DlssUpscaler {
         BindGroupLayout.builder().build(),
         new ColorTargetState(Optional.empty(), GpuFormat.RGBA8_UNORM, ColorTargetState.WRITE_ALPHA));
     private static final RenderPipeline UI_ALPHA_PIPELINE = fullscreenPipeline("ui_alpha",
-        BindGroupLayout.builder().withUniform("ColorSampler", UniformType.COMBINED_IMAGE_SAMPLER).build(),
+        BindGroupLayout.builder().withUniform("ColorSampler", UniformType.COMBINED_IMAGE_SAMPLER)
+            .withUniform("HudlessSampler", UniformType.COMBINED_IMAGE_SAMPLER).build(),
         ColorTargetState.DEFAULT);
     private static final int SHARPEN_INFO_SIZE = new Std140SizeCalculator().putFloat().putIVec2().get();
 
@@ -356,7 +386,7 @@ public final class DlssUpscaler {
     private static int motionInfoSize() {
         Std140SizeCalculator size = new Std140SizeCalculator().putMat4f().putMat4f().putVec3().putFloat().putVec2()
             .putInt().putInt().putInt().putInt();
-        for (int i = 0; i < EntityMotion.MAX * EntityMotion.VEC4S; i++) {
+        for (int i = 0; i < EntityMotion.MAX * EntityMotion.VEC4S + EntityMotion.MAX_CUBES * EntityMotion.CUBE_VEC4S; i++) {
             size.putVec4();
         }
         return size.get();
@@ -526,6 +556,7 @@ public final class DlssUpscaler {
         try (RenderPass pass = encoder.createRenderPass(() -> "DLSS UI alpha", uiAlphaView, Optional.empty())) {
             pass.setPipeline(uiAlphaPipeline);
             pass.setUniform("ColorSampler", frame, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
+            pass.setUniform("HudlessSampler", outputView, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
             pass.draw(3, 1, 0, 0);
         }
         return VulkanAccess.concat(images, VulkanAccess.describe(uiAlphaView));
@@ -870,8 +901,8 @@ public final class DlssUpscaler {
         int alignment = RenderSystem.getDevice().getDeviceInfo().limits().minUniformOffsetAlignment();
         Vec3 delta = currentPosition.subtract(previousPosition);
         GpuBufferSlice motionInfo;
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            Std140Builder builder = Std140Builder.onStack(stack, MOTION_INFO_SIZE)
+        {
+            Std140Builder builder = Std140Builder.intoBuffer(MOTION_INFO.clear())
                 .putMat4f(new Matrix4f(new Matrix4d(currentViewProjection).invert()))
                 .putMat4f(previousViewProjection)
                 .putVec3((float) delta.x, (float) delta.y, (float) delta.z)
@@ -880,7 +911,7 @@ public final class DlssUpscaler {
                 .putInt(DepthConvention.zeroToOne() ? 1 : 0)
                 .putInt(depthInverted ? 1 : 0)
                 .putInt(handInDepth ? 1 : 0);
-            ByteBuffer data = EntityMotion.write(builder, currentPosition).get();
+            ByteBuffer data = EntityMotion.write(builder, currentPosition, delta).get();
             motionInfo = encoder.transientMemory().uploadGpu(data, alignment, GpuBuffer.USAGE_UNIFORM);
         }
         RenderPassDescriptor motionPass = RenderPassDescriptor.builder(() -> "DLSS motion vectors")
