@@ -177,6 +177,8 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. W
   Could be reported to Vitrail (use @WrapOperation instead of @Redirect); ask the user first.
 - 2026-11-28: surv, dlss-optimized and dlss-test have `siris-1.4.0+mc26.3.jar` (replaced 1.1.6 / 1.1.6 / 1.2.2; backups in each
   profile's `mods-backup-2026-11-28-siris-1.4.0/`), not started in Lunar by me. dlss-test has `viris-0.4.0`. Older state below.
+- WEITER in Lunar (2026-11-28): the viris jar in dlss-optimized, dlss-test, just-optimized, simply-optimized-up-to-date and surv
+  replaced by `weiter-1.0.0+mc26.3.jar` (backups `mods-backup-2026-11-28-weiter/`), not started in Lunar by me.
 - Current Lunar install (2026-11-03): all three profiles have `siris-1.1.6+mc26.3.jar` (config `preset=m`,
   `configVersion=2`) + plain `vitrail-0.13.0-beta+mc26.3.jar`; surv and dlss-optimized also `viris-0.3.6+mc26.3.jar`,
   Voxy 0.2.20 and voxy-server-side (surv keeps an old `voxy-vulkan-0.1.0` as `.disabled`). Backups per step in each
