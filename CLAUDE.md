@@ -330,20 +330,8 @@ PATCH answers 400 the v3 field name is off: set Client-only on the version page.
 API while the project is in review.
 
 Newest first:
-- **v1.3.4: pending, do this next on the PC (since 2026-11-27).** Main has PR #8 (jitter only the frame's own camera) and
-  `version = "1.3.4+mc26.3"` (PR #10); bridge unchanged since 1.3.3. Not on GitHub or Modrinth yet. The user chose to test
-  first. 2026-11-28: steps (1)-(3) done in dev (bridge current, x sign flipped to +jitterX, FG spin captures look as
-  before; generated frames show colour banding in the Solas sky with either sign, so not from this change). Steps: (1) `git pull`, rebuild the bridge if `dlss-bridge/out` is older than 1.3.3. (2) x jitter sign test (see
-  "Jitter sign" under DLSS notes): dev, Solas, Quality, `JAVA_TOOL_OPTIONS=-Dsiris.testShots=8`, `gradlew runClient
-  --no-daemon -PtestWorld=vulkan-test -PdlssDebug=still -PtestTicks=600`, once with the default and once with
-  `jitterSignX=-1.0` in `run/config/siris.properties`; compare the 8 shots for horizontal shift/shimmer (floor rms as on
-  2026-10-31). If -1 is steadier: change `reportedJitterX()` to `+jitterX` (fix its comment and the Jitter sign note),
-  add a line to the notes, commit. Put `jitterSignX=1.0` back. (3) Quick look in game with Solas and FG (still camera,
-  turning), Lunar if the user wants. (4) `gradlew build`, then `gh release create v1.3.4
-  mod/build/libs/siris-1.3.4+mc26.3.jar ... --notes-file tools/release-notes-1.3.4.md` (ask the user to approve it).
-  (5) `tools\modrinth-upload.ps1 -Version 1.3.4`. (6) Replace this entry with the release line and the Modrinth id, update
-  "Current Lunar install" if installed there.
-- v1.3.3 (2026-11-26, Latest): single-mip attachment views for render passes (PR #7, SpinGiantCRM; VUID-12486 with mipmapped pack targets; @WrapOperation added by us). Modrinth hX58uGFI.
+- v1.3.4 (2026-11-28, Latest): jitter only the frame's own camera (PR #8, SpinGiantCRM), x jitter sign back to +jitterX. Modrinth Xb5g5lQv. Not installed in Lunar.
+- v1.3.3 (2026-11-26): single-mip attachment views for render passes (PR #7, SpinGiantCRM; VUID-12486 with mipmapped pack targets; @WrapOperation added by us). Modrinth hX58uGFI.
 - v1.3.2 (2026-11-26): `VK_KHR_format_feature_flags2` with optical flow (PR #6, SpinGiantCRM; validation VUID-01387 on Vulkan 1.2). Modrinth rphMDZvq.
 - v1.3.1 (2026-11-25): Ixeris works (issue #5): presenter child window on its own thread when the game window is on another. Modrinth 3X4dI7H8.
 - v1.3.0 (2026-11-12): Frame Generation up to 6x (driver-reported), latency stat from frame start. Modrinth nItwjslA.
