@@ -175,6 +175,8 @@ Goal: shader packs (Solas) + DLSS SR/FG on Vulkan, in the user's Lunar Client. W
   `VulkanCommandEncoder.submitRenderPass`); until 0.7.2 that was worked around with `tools/PatchVitrail.java` (removed 2026-10-31) and a
   local `-lunarfix` Vitrail jar (`../vitrail-dl`, never publish), since 0.7.2 `LunarCompat` does it at runtime.
   Could be reported to Vitrail (use @WrapOperation instead of @Redirect); ask the user first.
+- 2026-11-28: surv, dlss-optimized and dlss-test have `siris-1.4.0+mc26.3.jar` (replaced 1.1.6 / 1.1.6 / 1.2.2; backups in each
+  profile's `mods-backup-2026-11-28-siris-1.4.0/`), not started in Lunar by me. dlss-test has `viris-0.4.0`. Older state below.
 - Current Lunar install (2026-11-03): all three profiles have `siris-1.1.6+mc26.3.jar` (config `preset=m`,
   `configVersion=2`) + plain `vitrail-0.13.0-beta+mc26.3.jar`; surv and dlss-optimized also `viris-0.3.6+mc26.3.jar`,
   Voxy 0.2.20 and voxy-server-side (surv keeps an old `voxy-vulkan-0.1.0` as `.disabled`). Backups per step in each
@@ -343,7 +345,7 @@ PATCH answers 400 the v3 field name is off: set Client-only on the version page.
 API while the project is in review.
 
 Newest first:
-- v1.4.0 (2026-11-28, Latest): DLSS-G pUI as premultiplied GUI colour + alpha (banded skies in generated frames gone), per-part motion vectors, third-party notices in the jar. Modrinth h4tdvfLv. Not installed in Lunar.
+- v1.4.0 (2026-11-28, Latest): DLSS-G pUI as premultiplied GUI colour + alpha (banded skies in generated frames gone), per-part motion vectors, third-party notices in the jar. Modrinth h4tdvfLv. Installed in Lunar 2026-11-28 (surv, dlss-optimized, dlss-test), not started there by me.
 - v1.3.4 (2026-11-28): jitter only the frame's own camera (PR #8, SpinGiantCRM), x jitter sign back to +jitterX. Modrinth Xb5g5lQv. Not installed in Lunar.
 - v1.3.3 (2026-11-26): single-mip attachment views for render passes (PR #7, SpinGiantCRM; VUID-12486 with mipmapped pack targets; @WrapOperation added by us). Modrinth hX58uGFI.
 - v1.3.2 (2026-11-26): `VK_KHR_format_feature_flags2` with optical flow (PR #6, SpinGiantCRM; validation VUID-01387 on Vulkan 1.2). Modrinth rphMDZvq.
